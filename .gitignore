@@ -1,0 +1,23 @@
+# Build outputs
+/build/
+*.o
+*.a
+*.bin
+*.elf
+*.map
+*.tar
+
+# Generated disk and optical images
+*.img
+*.iso
+
+# Emulator and diagnostic output
+*.log
+bochsout.txt
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+*~
+*.swp
