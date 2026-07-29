@@ -14,6 +14,9 @@ RUN apt-get update \
         qemu-system-x86 \
     && rm -rf /var/lib/apt/lists/*
 
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
 WORKDIR /workspace
 
 CMD ["/bin/bash"]

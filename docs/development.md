@@ -7,6 +7,7 @@
 ```bash
 make docker-build
 make docker-check
+make docker-test
 make docker-shell
 ```
 
@@ -21,6 +22,22 @@ make check-env
 ```
 
 `make check-env` 会检查工具版本，并临时编译、链接一个 32 位 freestanding ELF 探针。只有命令存在但 `gcc -m32` 或 `ld -m elf_i386` 不可用时，自检仍会失败。
+
+## M1 构建和运行
+
+在开发容器或安装好依赖的宿主机中运行：
+
+```bash
+make build
+make image
+make test
+make run
+```
+
+- `build/boot.bin` 是严格 512 字节的 Boot Sector。
+- `build/os.img` 是写入 Boot Sector 的 1.44 MB 软盘镜像。
+- `make test` 使用 QEMU debugcon 进行无图形启动验证，适用于 CI。
+- `make run` 使用 QEMU curses 文本界面显示 BIOS 输出，默认 10 秒后自动结束；可用 `RUN_TIMEOUT=30s` 调整展示时间。
 
 ## 模拟器约定
 

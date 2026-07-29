@@ -5,6 +5,7 @@
 | 日期 | 成员 | 工作内容 | 提交或文件 | 验证证据 |
 | --- | --- | --- | --- | --- |
 | 2026-07-20 | 徐千顺 | 初始化仓库骨架、开发容器和课程文档 | `chore: initialize OrangeS course design repository` | `make docker-check` |
+| 2026-07-27 | 徐千顺 | 实现 512 字节 Boot Sector、软盘镜像构建和 QEMU 启动测试 | `boot/boot.asm`、`tests/test-boot.sh` | `make docker-test` |
 
 ## 记录要求
 
