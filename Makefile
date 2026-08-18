@@ -7,30 +7,37 @@ HOST_GID := $(shell id -g)
 BUILD_DIR := build
 BOOT_SOURCE := boot/boot.asm
 BOOT_BINARY := $(BUILD_DIR)/boot.bin
+LOADER_SOURCE := boot/loader.asm
+LOADER_BINARY := $(BUILD_DIR)/loader.bin
+KERNEL_SOURCE := kernel/kernel.asm
+KERNEL_BINARY := $(BUILD_DIR)/kernel.bin
 DISK_IMAGE := $(BUILD_DIR)/os.img
+SCREENSHOT := assets/screenshots/m2-protected-mode.png
 NASM ?= nasm
 QEMU ?= qemu-system-i386
 RUN_TIMEOUT ?= 10s
 
-.PHONY: help build image run test clean check-env docker-build docker-check docker-test docker-shell
+.PHONY: help build image run test screenshot clean check-env docker-build docker-check docker-test docker-screenshot docker-shell
 
 help: ## 显示可用命令
 	@printf '%s\n' \
 		'OrangeS 课程设计仓库' \
 		'' \
-		'  make build         汇编 512 字节 Boot Sector' \
-		'  make image         生成 1.44 MB 启动软盘镜像' \
+		'  make build         构建 Boot Sector、Loader 和 Kernel' \
+		'  make image         生成 FAT12 启动软盘镜像' \
 		'  make run           在 QEMU 终端界面启动系统' \
-		'  make test          检查镜像并运行 QEMU 启动测试' \
+		'  make test          验证 FAT12 和完整启动链' \
+		'  make screenshot    生成 M2 启动截图' \
 		'  make clean         删除构建产物' \
 		'' \
 		'  make check-env     检查本机 32 位操作系统开发工具链' \
 		'  make docker-build  构建统一开发环境镜像' \
 		'  make docker-check  在开发容器中运行工具链自检' \
 		'  make docker-test   在开发容器中运行启动测试' \
+		'  make docker-screenshot  在开发容器中生成启动截图' \
 		'  make docker-shell  进入挂载当前仓库的开发容器'
 
-build: $(BOOT_BINARY) ## 汇编 Boot Sector
+build: $(BOOT_BINARY) $(LOADER_BINARY) $(KERNEL_BINARY) ## 构建启动链
 
 image: $(DISK_IMAGE) ## 生成启动镜像
 
@@ -49,7 +56,28 @@ run: image ## 启动 QEMU
 	printf 'QEMU 演示已在 %s 后自动结束。\n' "$(RUN_TIMEOUT)"
 
 test: image ## 执行启动测试
-	@./tests/test-boot.sh "$(BOOT_BINARY)" "$(DISK_IMAGE)"
+	@./tests/test-boot.sh \
+		"$(BOOT_BINARY)" \
+		"$(LOADER_BINARY)" \
+		"$(KERNEL_BINARY)" \
+		"$(DISK_IMAGE)"
+
+screenshot: image ## 生成 M2 启动截图
+	@mkdir -p "$(dir $(SCREENSHOT))"
+	@rm -f "$(SCREENSHOT)" "$(BUILD_DIR)/screenshot-debug.log"
+	@(sleep 2; printf 'screendump %s -f png\nquit\n' "$(SCREENSHOT)") | \
+		$(QEMU) \
+			-machine accel=tcg \
+			-drive "file=$(DISK_IMAGE),format=raw,if=floppy" \
+			-boot a \
+			-display none \
+			-monitor stdio \
+			-serial none \
+			-debugcon "file:$(BUILD_DIR)/screenshot-debug.log" \
+			-no-reboot \
+			-no-shutdown
+	@test -s "$(SCREENSHOT)"
+	@printf '已生成 %s\n' "$(SCREENSHOT)"
 
 clean: ## 删除构建产物
 	rm -rf "$(BUILD_DIR)"
@@ -58,10 +86,21 @@ $(BOOT_BINARY): $(BOOT_SOURCE)
 	@mkdir -p "$(BUILD_DIR)"
 	$(NASM) -f bin -o "$@" "$<"
 
-$(DISK_IMAGE): $(BOOT_BINARY)
+$(LOADER_BINARY): $(LOADER_SOURCE)
 	@mkdir -p "$(BUILD_DIR)"
-	dd if=/dev/zero of="$@" bs=512 count=2880 status=none
+	$(NASM) -f bin -o "$@" "$<"
+
+$(KERNEL_BINARY): $(KERNEL_SOURCE)
+	@mkdir -p "$(BUILD_DIR)"
+	$(NASM) -f bin -o "$@" "$<"
+
+$(DISK_IMAGE): $(BOOT_BINARY) $(LOADER_BINARY) $(KERNEL_BINARY)
+	@mkdir -p "$(BUILD_DIR)"
+	rm -f "$@"
+	mformat -C -f 1440 -i "$@" -v ORANGES ::
 	dd if="$<" of="$@" bs=512 count=1 conv=notrunc status=none
+	mcopy -i "$@" "$(LOADER_BINARY)" ::LOADER.BIN
+	mcopy -i "$@" "$(KERNEL_BINARY)" ::KERNEL.BIN
 
 check-env: ## 检查开发工具链
 	@./scripts/check-env.sh
@@ -86,6 +125,15 @@ docker-test: ## 在容器中执行启动测试
 		--workdir /workspace \
 		$(DOCKER_IMAGE) \
 		make test
+
+docker-screenshot: ## 在容器中生成启动截图
+	docker run --rm \
+		--user "$(HOST_UID):$(HOST_GID)" \
+		--env HOME=/tmp \
+		--volume "$(ROOT_DIR):/workspace" \
+		--workdir /workspace \
+		$(DOCKER_IMAGE) \
+		make screenshot
 
 docker-shell: ## 进入开发容器
 	docker run --rm --interactive --tty \

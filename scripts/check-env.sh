@@ -11,7 +11,10 @@ required_commands=(
     ar
     make
     mcopy
+    mdel
     mformat
+    mdir
+    mshowfat
     qemu-system-i386
 )
 

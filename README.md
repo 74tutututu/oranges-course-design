@@ -7,10 +7,10 @@
 - 课程：操作系统课程设计
 - 小组成员：徐千顺、赵晴
 - 参考方向：OrangeS `chapter11/c`
-- 当前阶段：M1 Boot Sector 已完成，下一阶段为 M2 保护模式与 Loader
+- 当前阶段：M2 保护模式与 Loader 已完成，下一阶段为 M3 内核与中断
 - 主要模拟器：QEMU；Bochs 作为可选调试工具
 
-当前仓库不包含 OrangeS 参考源码或预生成磁盘镜像。M1 Boot Sector 为小组自主实现；后续代码应按照路线图逐步实现，并明确记录参考来源和小组贡献。
+当前仓库不包含 OrangeS 参考源码或预生成磁盘镜像。Boot Sector、Loader 和最小 Kernel 均为小组自主实现；后续代码应按照路线图逐步实现，并明确记录参考来源和小组贡献。
 
 ## 快速开始
 
@@ -23,11 +23,12 @@ make docker-test
 make docker-shell
 ```
 
-进入开发容器后，可以构建并在 QEMU 终端界面启动 M1 镜像：
+进入开发容器后，可以构建并在 QEMU 终端界面启动 M2 镜像：
 
 ```bash
 make image
 make run
+make screenshot
 ```
 
 `make run` 默认展示 10 秒后自动退出；可通过 `make run RUN_TIMEOUT=30s` 调整展示时间。
@@ -40,16 +41,21 @@ make check-env
 
 具体依赖和运行方式见 [开发指南](docs/development.md)。
 
-## M1 启动结果
+## M2 启动结果
 
-M1 实现了 512 字节的 16 位 x86 Boot Sector。BIOS 将它加载到 `0x7c00` 后，引导代码初始化段寄存器和栈，通过 BIOS 文本服务输出：
+系统使用标准 1.44 MB FAT12 镜像。Boot Sector 从根目录装载 `LOADER.BIN`，Loader 再装载 `KERNEL.BIN`、开启 A20、建立 GDT 并进入 32 位保护模式：
 
 ```text
 OrangeS Course Design
 Boot OK
+Loader OK
+Protected Mode OK
+Kernel OK
 ```
 
-`make test` 还会检查引导签名、镜像尺寸，并通过 QEMU debugcon 验证上述代码确实被执行。
+![M2 保护模式启动结果](assets/screenshots/m2-protected-mode.png)
+
+`make test` 会检查引导签名、FAT12 文件、碎片化簇链、启动顺序以及 Loader/Kernel 缺失路径，并通过 QEMU debugcon 验证 Kernel 确实在保护模式下执行。
 
 ## 目录结构
 
