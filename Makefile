@@ -10,10 +10,19 @@ BOOT_BINARY := $(BUILD_DIR)/boot.bin
 LOADER_SOURCE := boot/loader.asm
 LOADER_BINARY := $(BUILD_DIR)/loader.bin
 KERNEL_SOURCE := kernel/kernel.asm
+KERNEL_SOURCES := kernel/main.c kernel/pic.c kernel/clock.c kernel/keyboard.c kernel/interrupt.c
+KERNEL_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(KERNEL_SOURCES))
+KERNEL_ENTRY_OBJECT := $(BUILD_DIR)/kernel/kernel.o
+KERNEL_IO_OBJECT := $(BUILD_DIR)/kernel/io.o
+KERNEL_ELF := $(BUILD_DIR)/kernel.elf
 KERNEL_BINARY := $(BUILD_DIR)/kernel.bin
+KERNEL_LINKER := kernel/linker.ld
 DISK_IMAGE := $(BUILD_DIR)/os.img
-SCREENSHOT := assets/screenshots/m2-protected-mode.png
+SCREENSHOT := assets/screenshots/m3-interrupts.png
 NASM ?= nasm
+GCC ?= gcc
+LD ?= ld
+OBJCOPY ?= objcopy
 QEMU ?= qemu-system-i386
 RUN_TIMEOUT ?= 10s
 
@@ -27,7 +36,7 @@ help: ## 显示可用命令
 		'  make image         生成 FAT12 启动软盘镜像' \
 		'  make run           在 QEMU 终端界面启动系统' \
 		'  make test          验证 FAT12 和完整启动链' \
-		'  make screenshot    生成 M2 启动截图' \
+		'  make screenshot    生成 M3 中断启动截图' \
 		'  make clean         删除构建产物' \
 		'' \
 		'  make check-env     检查本机 32 位操作系统开发工具链' \
@@ -62,10 +71,10 @@ test: image ## 执行启动测试
 		"$(KERNEL_BINARY)" \
 		"$(DISK_IMAGE)"
 
-screenshot: image ## 生成 M2 启动截图
+screenshot: image ## 生成 M3 中断启动截图
 	@mkdir -p "$(dir $(SCREENSHOT))"
 	@rm -f "$(SCREENSHOT)" "$(BUILD_DIR)/screenshot-debug.log"
-	@(sleep 2; printf 'screendump %s -f png\nquit\n' "$(SCREENSHOT)") | \
+	@(sleep 1; printf 'sendkey a\n'; sleep 2; printf 'screendump %s -f png\nquit\n' "$(SCREENSHOT)") | \
 		$(QEMU) \
 			-machine accel=tcg \
 			-drive "file=$(DISK_IMAGE),format=raw,if=floppy" \
@@ -90,9 +99,24 @@ $(LOADER_BINARY): $(LOADER_SOURCE)
 	@mkdir -p "$(BUILD_DIR)"
 	$(NASM) -f bin -o "$@" "$<"
 
-$(KERNEL_BINARY): $(KERNEL_SOURCE)
+$(KERNEL_ENTRY_OBJECT): $(KERNEL_SOURCE)
+	@mkdir -p "$(dir $@)"
+	$(NASM) -f elf32 -o "$@" "$<"
+
+$(KERNEL_IO_OBJECT): kernel/io.asm
+	@mkdir -p "$(dir $@)"
+	$(NASM) -f elf32 -o "$@" "$<"
+
+$(BUILD_DIR)/kernel/%.o: kernel/%.c include/type.h include/const.h include/protect.h include/global.h include/proto.h
+	@mkdir -p "$(dir $@)"
+	$(GCC) -m32 -ffreestanding -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -fno-unwind-tables -nostdinc -Wall -Wextra -Iinclude -c -o "$@" "$<"
+
+$(KERNEL_ELF): $(KERNEL_ENTRY_OBJECT) $(KERNEL_IO_OBJECT) $(KERNEL_OBJECTS) $(KERNEL_LINKER)
 	@mkdir -p "$(BUILD_DIR)"
-	$(NASM) -f bin -o "$@" "$<"
+	$(LD) -m elf_i386 -T "$(KERNEL_LINKER)" -o "$@" $(KERNEL_ENTRY_OBJECT) $(KERNEL_IO_OBJECT) $(KERNEL_OBJECTS)
+
+$(KERNEL_BINARY): $(KERNEL_ELF)
+	$(OBJCOPY) -O binary "$<" "$@"
 
 $(DISK_IMAGE): $(BOOT_BINARY) $(LOADER_BINARY) $(KERNEL_BINARY)
 	@mkdir -p "$(BUILD_DIR)"

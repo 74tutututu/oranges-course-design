@@ -1,6 +1,6 @@
 # 计划架构
 
-本文件描述目标结构、当前启动链和模块责任。M2 已形成可验证的 Boot、Loader 和最小 Kernel 交接点。
+本文件描述目标结构、当前启动链和模块责任。M3 已形成可验证的 C 内核、IDT、PIC、PIT 和键盘中断基础。
 
 ## 启动与运行链路
 
@@ -9,7 +9,8 @@ BIOS
   -> Boot Sector（FAT12 查找 LOADER.BIN）
   -> Loader（加载 KERNEL.BIN、A20、GDT、保护模式）
   -> 32 位 Kernel 入口
-  -> 中断、时钟、键盘与进程调度
+  -> C 内核、IDT、PIC、PIT 和键盘 IRQ
+  -> 进程调度
   -> TTY / 控制台
   -> MM 与 FS 服务
   -> 系统调用与用户态库
@@ -33,7 +34,22 @@ BIOS
 - Boot Sector 通过 `DL` 向 Loader 传递 BIOS 启动驱动器号，Loader 入口为 `0x9000:0x0100`。
 - Loader 使用 `0x08` 平坦代码段和 `0x10` 平坦数据段，开启 A20 后设置 `CR0.PE`。
 - Kernel 入口为线性地址 `0x10000`；进入时 CPU 已处于 32 位保护模式，`ESP=0x9f000`，中断关闭。
-- M2 尚未安装 IDT，Kernel 不得开启中断；该契约将在 M3 引入正式内核入口和中断初始化时扩展。
+- M3 的 Kernel 在安装 IDT、PIC、PIT 和 Keyboard IRQ 后才执行 `sti`；发生异常时进入统一停机处理，避免无提示 triple fault。
+
+M3 完成后的内核初始化顺序为：
+
+```text
+kernel_entry
+  -> kernel_main
+  -> init_idt
+  -> init_pic
+  -> init_timer
+  -> init_keyboard
+  -> sti
+  -> hlt idle loop
+```
+
+M3 的 IDT 使用 `0x08` 代码选择子，PIC 将 IRQ0/IRQ1 映射到 `0x20/0x21`；Timer 频率为 100 Hz，Keyboard 读取端口 `0x60` 的原始扫描码。
 
 ## 模块边界
 

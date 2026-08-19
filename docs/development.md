@@ -23,7 +23,7 @@ make check-env
 
 `make check-env` 会检查工具版本，并临时编译、链接一个 32 位 freestanding ELF 探针。只有命令存在但 `gcc -m32` 或 `ld -m elf_i386` 不可用时，自检仍会失败。
 
-## M2 构建和运行
+## M3 构建和运行
 
 在开发容器或安装好依赖的宿主机中运行：
 
@@ -37,11 +37,11 @@ make screenshot
 
 - `build/boot.bin` 是严格 512 字节的 Boot Sector。
 - `build/loader.bin` 负责 FAT12 内核装载和保护模式切换。
-- `build/kernel.bin` 是运行在 `0x10000` 的最小 32 位 Kernel。
+- `build/kernel.elf` 是入口为 `0x10000` 的 ELF32 C Kernel，`build/kernel.bin` 是供 Loader 装载的平坦二进制。
 - `build/os.img` 是包含 Loader 和 Kernel 的 1.44 MB FAT12 软盘镜像。
 - `make test` 使用 QEMU debugcon 和 debug-exit 进行无图形启动及失败路径验证，适用于 CI。
 - `make run` 使用 QEMU curses 文本界面显示 BIOS 输出，默认 10 秒后自动结束；可用 `RUN_TIMEOUT=30s` 调整展示时间。
-- `make screenshot` 使用 QEMU monitor 生成 `assets/screenshots/m2-protected-mode.png`。
+- `make screenshot` 使用 QEMU monitor 注入一次 `a` 键并生成 `assets/screenshots/m3-interrupts.png`。
 
 ## 模拟器约定
 

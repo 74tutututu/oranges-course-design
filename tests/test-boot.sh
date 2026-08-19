@@ -8,6 +8,7 @@ loader_binary="${2:-${root_dir}/build/loader.bin}"
 kernel_binary="${3:-${root_dir}/build/kernel.bin}"
 disk_image="${4:-${root_dir}/build/os.img}"
 build_dir="${root_dir}/build"
+kernel_elf="${build_dir}/kernel.elf"
 
 fail()
 {
@@ -58,6 +59,39 @@ run_qemu()
     assert_file "${log_path}"
 }
 
+run_success_qemu()
+{
+    local image_path="$1"
+    local log_path="$2"
+    local qemu_status
+
+    rm -f "${log_path}"
+    set +e
+    (
+        sleep 1
+        printf 'sendkey a\n'
+        sleep 2
+        printf 'quit\n'
+    ) | timeout --signal=TERM 6s \
+        qemu-system-i386 \
+        -machine accel=tcg \
+        -drive "file=${image_path},format=raw,if=floppy" \
+        -boot a \
+        -display none \
+        -monitor stdio \
+        -serial none \
+        -debugcon "file:${log_path}" \
+        -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
+        -no-reboot \
+        -no-shutdown >/dev/null
+    qemu_status=${PIPESTATUS[1]}
+    set -e
+
+    [[ "${qemu_status}" == 33 || "${qemu_status}" == 124 ]] || \
+        fail "完整启动 QEMU 状态码应为 33 或超时 124，实际为 ${qemu_status}"
+    assert_file "${log_path}"
+}
+
 line_number()
 {
     local pattern="$1"
@@ -70,6 +104,7 @@ assert_file "${boot_binary}"
 assert_file "${loader_binary}"
 assert_file "${kernel_binary}"
 assert_file "${disk_image}"
+assert_file "${kernel_elf}"
 
 boot_size="$(stat --format='%s' "${boot_binary}")"
 loader_size="$(stat --format='%s' "${loader_binary}")"
@@ -81,6 +116,8 @@ boot_signature="$(od --address-radix=n --format=x1 --skip-bytes=510 --read-bytes
 [[ "${boot_signature}" == 55aa ]] || fail "引导签名应为 55aa，实际为 ${boot_signature}"
 ((loader_size > 0 && loader_size <= 65024)) || fail "Loader 大小超出 0x9000:0x0100 加载区域"
 ((kernel_size > 0 && kernel_size <= 65536)) || fail "Kernel 大小超出 0x1000:0x0000 加载区域"
+readelf -h "${kernel_elf}" | grep --quiet --extended-regexp 'Class:[[:space:]]+ELF32' || fail 'Kernel ELF 不是 ELF32'
+objdump -f "${kernel_elf}" | grep --quiet 'architecture: i386' || fail 'Kernel ELF 目标架构不是 i386'
 [[ "${image_size}" == 1474560 ]] || fail "软盘镜像应为 1474560 字节，实际为 ${image_size}"
 cmp --silent --bytes=512 "${boot_binary}" "${disk_image}" || fail '镜像首扇区与 boot.bin 不一致'
 
@@ -89,7 +126,7 @@ grep --quiet --extended-regexp '(^|/)LOADER\.BIN$' <<<"${directory_listing}" || 
 grep --quiet --extended-regexp '(^|/)KERNEL\.BIN$' <<<"${directory_listing}" || fail 'FAT12 根目录缺少 KERNEL.BIN'
 
 success_log="${build_dir}/qemu-success.log"
-run_qemu "${disk_image}" "${success_log}" 33
+run_success_qemu "${disk_image}" "${success_log}"
 
 boot_line="$(line_number 'Boot OK' "${success_log}")"
 loader_line="$(line_number 'Loader OK' "${success_log}")"
@@ -99,6 +136,11 @@ kernel_line="$(line_number 'Kernel OK' "${success_log}")"
     fail '完整启动日志缺少预期信息'
 ((boot_line < loader_line && loader_line < protected_line && protected_line < kernel_line)) || \
     fail '启动信息顺序不正确'
+grep --text --quiet --fixed-strings 'Kernel C OK' "${success_log}" || fail 'C 内核入口没有执行'
+grep --text --quiet --fixed-strings 'IDT OK' "${success_log}" || fail 'IDT 初始化没有完成'
+grep --text --quiet --fixed-strings 'PIC OK' "${success_log}" || fail 'PIC 初始化没有完成'
+grep --text --quiet --fixed-strings 'TIMER IRQ OK' "${success_log}" || fail 'Timer IRQ 没有触发'
+grep --text --quiet --fixed-strings 'KEYBOARD IRQ OK' "${success_log}" || fail 'Keyboard IRQ 没有触发'
 
 missing_loader_image="${build_dir}/missing-loader.img"
 missing_loader_log="${build_dir}/qemu-missing-loader.log"
@@ -126,7 +168,7 @@ mcopy -i "${fragmented_image}" "${loader_binary}" ::LOADER.BIN
 mcopy -i "${fragmented_image}" "${kernel_binary}" ::KERNEL.BIN
 fragmented_chain="$(mshowfat -i "${fragmented_image}" ::LOADER.BIN)"
 grep --quiet --fixed-strings '> <' <<<"${fragmented_chain}" || fail '测试镜像中的 Loader 未形成碎片化簇链'
-run_qemu "${fragmented_image}" "${fragmented_log}" 33
+run_success_qemu "${fragmented_image}" "${fragmented_log}"
 grep --text --quiet --fixed-strings 'Kernel OK' "${fragmented_log}" || fail '碎片化 Loader 未能完成启动'
 
 printf '[ok] Boot Sector: 512 字节，签名 55aa。\n'
@@ -134,3 +176,4 @@ printf '[ok] FAT12 镜像包含 LOADER.BIN 和 KERNEL.BIN。\n'
 printf '[ok] 完整启动链已进入保护模式并执行 Kernel。\n'
 printf '[ok] Loader/Kernel 缺失路径均输出明确错误。\n'
 printf '[ok] 碎片化 Loader 已通过 FAT12 簇链正确装载。\n'
+printf '[ok] C 内核、IDT、PIC、Timer IRQ 和 Keyboard IRQ 均已验证。\n'

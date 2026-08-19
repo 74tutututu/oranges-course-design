@@ -7,7 +7,7 @@
 - 课程：操作系统课程设计
 - 小组成员：徐千顺、赵晴
 - 参考方向：OrangeS `chapter11/c`
-- 当前阶段：M2 保护模式与 Loader 已完成，下一阶段为 M3 内核与中断
+- 当前阶段：M3 内核与中断已完成，下一阶段为 M4 进程与调度
 - 主要模拟器：QEMU；Bochs 作为可选调试工具
 
 当前仓库不包含 OrangeS 参考源码或预生成磁盘镜像。Boot Sector、Loader 和最小 Kernel 均为小组自主实现；后续代码应按照路线图逐步实现，并明确记录参考来源和小组贡献。
@@ -23,7 +23,7 @@ make docker-test
 make docker-shell
 ```
 
-进入开发容器后，可以构建并在 QEMU 终端界面启动 M2 镜像：
+进入开发容器后，可以构建并在 QEMU 终端界面启动 M3 镜像：
 
 ```bash
 make image
@@ -41,9 +41,9 @@ make check-env
 
 具体依赖和运行方式见 [开发指南](docs/development.md)。
 
-## M2 启动结果
+## M3 启动结果
 
-系统使用标准 1.44 MB FAT12 镜像。Boot Sector 从根目录装载 `LOADER.BIN`，Loader 再装载 `KERNEL.BIN`、开启 A20、建立 GDT 并进入 32 位保护模式：
+系统使用标准 1.44 MB FAT12 镜像。Boot Sector 从根目录装载 `LOADER.BIN`，Loader 再装载 `KERNEL.BIN`、开启 A20、建立 GDT 并进入 32 位保护模式。Kernel 继续初始化 C 入口、IDT、8259A PIC、PIT 和键盘 IRQ：
 
 ```text
 OrangeS Course Design
@@ -51,11 +51,18 @@ Boot OK
 Loader OK
 Protected Mode OK
 Kernel OK
+Kernel C OK
+IDT OK
+PIC OK
+TIMER IRQ OK
+KEYBOARD IRQ OK
 ```
 
-![M2 保护模式启动结果](assets/screenshots/m2-protected-mode.png)
+![M3 中断启动结果](assets/screenshots/m3-interrupts.png)
 
 `make test` 会检查引导签名、FAT12 文件、碎片化簇链、启动顺序以及 Loader/Kernel 缺失路径，并通过 QEMU debugcon 验证 Kernel 确实在保护模式下执行。
+
+M3 的 C 内核只验证中断基础设施和硬件事件计数，不包含进程、TTY、文件系统或用户态功能。
 
 ## 目录结构
 

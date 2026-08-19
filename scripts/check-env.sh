@@ -9,6 +9,7 @@ required_commands=(
     objdump
     readelf
     ar
+    objcopy
     make
     mcopy
     mdel

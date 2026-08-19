@@ -7,6 +7,7 @@
 | 2026-07-20 | 徐千顺 | 初始化仓库骨架、开发容器和课程文档 | `chore: initialize OrangeS course design repository` | `make docker-check` |
 | 2026-07-27 | 徐千顺 | 实现 512 字节 Boot Sector、软盘镜像构建和 QEMU 启动测试 | `boot/boot.asm`、`tests/test-boot.sh` | `make docker-test` |
 | 2026-08-18 | 徐千顺 | 实现 FAT12 Loader、保护模式切换和最小 32 位 Kernel | `boot/loader.asm`、`kernel/kernel.asm` | `make docker-test`、`assets/screenshots/m2-protected-mode.png` |
+| 2026-08-19 | 徐千顺 | 实现 C 内核入口、IDT、8259A PIC、PIT Timer IRQ 和 Keyboard IRQ | `kernel/*.c`、`kernel/kernel.asm`、`kernel/linker.ld` | `make docker-test`、`assets/screenshots/m3-interrupts.png` |
 
 ## 记录要求
 
