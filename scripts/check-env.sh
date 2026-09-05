@@ -10,6 +10,7 @@ required_commands=(
     readelf
     ar
     objcopy
+    nm
     make
     mcopy
     mdel

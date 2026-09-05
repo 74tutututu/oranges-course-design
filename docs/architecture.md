@@ -1,6 +1,6 @@
 # 计划架构
 
-本文件描述目标结构、当前启动链和模块责任。M3 已形成可验证的 C 内核、IDT、PIC、PIT 和键盘中断基础。
+本文件描述目标结构、当前启动链和模块责任。M4 已在 M3 的中断基础上形成可验证的多任务和抢占式调度。
 
 ## 启动与运行链路
 
@@ -10,14 +10,14 @@ BIOS
   -> Loader（加载 KERNEL.BIN、A20、GDT、保护模式）
   -> 32 位 Kernel 入口
   -> C 内核、IDT、PIC、PIT 和键盘 IRQ
-  -> 进程调度
+  -> Timer 抢占式进程调度
   -> TTY / 控制台
   -> MM 与 FS 服务
   -> 系统调用与用户态库
   -> Shell 和命令程序
 ```
 
-## M2 内存布局
+## 内存布局
 
 | 物理地址 | 用途 |
 | --- | --- |
@@ -29,6 +29,8 @@ BIOS
 | `0x9f000` | 保护模式临时栈顶 |
 | `0xb8000` | VGA 文本显存 |
 
+任务栈由 Kernel `.bss` 中的 `task_stacks[3][0x2000]` 提供；每个任务初始化为一个包含段寄存器、`pushad` 寄存器组、IRQ 占位和 `iretd` 返回现场的 64 字节 `STACK_FRAME`。
+
 ## 启动交接契约
 
 - Boot Sector 通过 `DL` 向 Loader 传递 BIOS 启动驱动器号，Loader 入口为 `0x9000:0x0100`。
@@ -36,7 +38,7 @@ BIOS
 - Kernel 入口为线性地址 `0x10000`；进入时 CPU 已处于 32 位保护模式，`ESP=0x9f000`，中断关闭。
 - M3 的 Kernel 在安装 IDT、PIC、PIT 和 Keyboard IRQ 后才执行 `sti`；发生异常时进入统一停机处理，避免无提示 triple fault。
 
-M3 完成后的内核初始化顺序为：
+M4 完成后的内核初始化顺序为：
 
 ```text
 kernel_entry
@@ -45,11 +47,25 @@ kernel_entry
   -> init_pic
   -> init_timer
   -> init_keyboard
-  -> sti
-  -> hlt idle loop
+  -> disable_int
+  -> start_first_process（从预构造 STACK_FRAME 执行 iretd）
 ```
 
-M3 的 IDT 使用 `0x08` 代码选择子，PIC 将 IRQ0/IRQ1 映射到 `0x20/0x21`；Timer 频率为 100 Hz，Keyboard 读取端口 `0x60` 的原始扫描码。
+M3 的 IDT 使用 `0x08` 代码选择子，PIC 将 IRQ0/IRQ1 映射到 `0x20/0x21`；Timer 频率为 100 Hz，Keyboard 读取端口 `0x60` 的原始扫描码。M4 在 IRQ0 上使用固定 5 tick 时间片轮转三个 Ring 0 任务。
+
+## M4 调度路径
+
+```text
+Timer IRQ0
+  -> irq_common 保存当前任务 STACK_FRAME
+  -> irq_dispatch(0)
+  -> process_timer_tick()
+  -> schedule()（每 5 tick 轮转）
+  -> 从 p_proc_ready->saved_esp 恢复段寄存器和通用寄存器
+  -> iretd 返回下一个任务
+```
+
+M4 的三个任务均运行在 Ring 0，共享 Loader 提供的平坦代码段和数据段；任务函数不返回，暂不使用 LDT、用户栈或用户态权限。
 
 ## 模块边界
 

@@ -10,7 +10,7 @@ BOOT_BINARY := $(BUILD_DIR)/boot.bin
 LOADER_SOURCE := boot/loader.asm
 LOADER_BINARY := $(BUILD_DIR)/loader.bin
 KERNEL_SOURCE := kernel/kernel.asm
-KERNEL_SOURCES := kernel/main.c kernel/pic.c kernel/clock.c kernel/keyboard.c kernel/interrupt.c
+KERNEL_SOURCES := kernel/main.c kernel/pic.c kernel/clock.c kernel/keyboard.c kernel/interrupt.c kernel/proc.c
 KERNEL_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(KERNEL_SOURCES))
 KERNEL_ENTRY_OBJECT := $(BUILD_DIR)/kernel/kernel.o
 KERNEL_IO_OBJECT := $(BUILD_DIR)/kernel/io.o
@@ -18,7 +18,7 @@ KERNEL_ELF := $(BUILD_DIR)/kernel.elf
 KERNEL_BINARY := $(BUILD_DIR)/kernel.bin
 KERNEL_LINKER := kernel/linker.ld
 DISK_IMAGE := $(BUILD_DIR)/os.img
-SCREENSHOT := assets/screenshots/m3-interrupts.png
+SCREENSHOT := assets/screenshots/m4-processes.png
 NASM ?= nasm
 GCC ?= gcc
 LD ?= ld
@@ -36,7 +36,7 @@ help: ## 显示可用命令
 		'  make image         生成 FAT12 启动软盘镜像' \
 		'  make run           在 QEMU 终端界面启动系统' \
 		'  make test          验证 FAT12 和完整启动链' \
-		'  make screenshot    生成 M3 中断启动截图' \
+		'  make screenshot    生成 M4 进程调度截图' \
 		'  make clean         删除构建产物' \
 		'' \
 		'  make check-env     检查本机 32 位操作系统开发工具链' \
@@ -71,7 +71,7 @@ test: image ## 执行启动测试
 		"$(KERNEL_BINARY)" \
 		"$(DISK_IMAGE)"
 
-screenshot: image ## 生成 M3 中断启动截图
+screenshot: image ## 生成 M4 进程调度截图
 	@mkdir -p "$(dir $(SCREENSHOT))"
 	@rm -f "$(SCREENSHOT)" "$(BUILD_DIR)/screenshot-debug.log"
 	@(sleep 1; printf 'sendkey a\n'; sleep 2; printf 'screendump %s -f png\nquit\n' "$(SCREENSHOT)") | \

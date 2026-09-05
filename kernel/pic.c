@@ -13,7 +13,7 @@ void init_pic(void)
     out_byte(INT_M_CTLMASK, 0x01);
     out_byte(INT_S_CTLMASK, 0x01);
 
-    /* Only the timer and keyboard IRQs are enabled in M3. */
+    /* Only the timer and keyboard IRQs are enabled in M4. */
     out_byte(INT_M_CTLMASK, 0xfc);
     out_byte(INT_S_CTLMASK, 0xff);
 }

@@ -11,9 +11,6 @@ void keyboard_irq(u32 irq)
     if (keyboard_irq_count == 1) {
         debug_puts("KEYBOARD IRQ OK\r\n");
     }
-    if (ticks >= 10) {
-        test_complete = 1;
-    }
 }
 
 void init_keyboard(void)

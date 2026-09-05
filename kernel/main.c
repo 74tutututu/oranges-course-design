@@ -6,7 +6,6 @@
 volatile u32 ticks;
 volatile u32 keyboard_irq_count;
 volatile u8 last_scan_code;
-volatile u32 test_complete;
 struct gate idt[IDT_SIZE];
 u8 idt_ptr[6];
 irq_handler irq_table[NR_IRQ];
@@ -113,7 +112,7 @@ void kernel_main(void)
     ticks = 0;
     keyboard_irq_count = 0;
     last_scan_code = 0;
-    test_complete = 0;
+    init_processes();
     for (i = 0; i < NR_IRQ; i++) {
         irq_table[i] = spurious_irq;
     }
@@ -133,6 +132,10 @@ void kernel_main(void)
 
     init_timer();
     init_keyboard();
-    enable_int();
-
+    screen_puts(10, 0, "Current task: TaskA", 0x0f);
+    screen_put_u32(12, 0, "TaskA runs: ", 0, 0x0f);
+    screen_put_u32(13, 0, "TaskB runs: ", 0, 0x0f);
+    screen_put_u32(14, 0, "TaskC runs: ", 0, 0x0f);
+    disable_int();
+    start_first_process();
 }

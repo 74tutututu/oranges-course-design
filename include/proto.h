@@ -2,6 +2,7 @@
 #define ORANGES_PROTO_H
 
 #include "type.h"
+#include "proc.h"
 
 void kernel_main(void);
 void init_idt(void);
@@ -13,6 +14,12 @@ void exception_dispatch(u32 vector);
 void spurious_irq(u32 irq);
 void timer_irq(u32 irq);
 void keyboard_irq(u32 irq);
+void init_processes(void);
+void schedule(void);
+void process_timer_tick(void);
+void task_a(void);
+void task_b(void);
+void task_c(void);
 
 void screen_clear(void);
 void screen_puts(u32 row, u32 column, const char *text, u8 color);
@@ -59,5 +66,6 @@ extern void exception31(void);
 extern void irq0(void);
 extern void irq1(void);
 extern void irq_default(void);
+extern void start_first_process(void);
 
 #endif

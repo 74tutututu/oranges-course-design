@@ -59,19 +59,20 @@ run_qemu()
     assert_file "${log_path}"
 }
 
-run_success_qemu()
+run_observed_qemu()
 {
     local image_path="$1"
     local log_path="$2"
+    local stderr_log="${build_dir}/qemu-success.stderr"
     local qemu_status
 
     rm -f "${log_path}"
+    rm -f "${stderr_log}"
     set +e
     (
         sleep 1
         printf 'sendkey a\n'
-        sleep 2
-        printf 'quit\n'
+        sleep 5
     ) | timeout --signal=TERM 6s \
         qemu-system-i386 \
         -machine accel=tcg \
@@ -81,15 +82,25 @@ run_success_qemu()
         -monitor stdio \
         -serial none \
         -debugcon "file:${log_path}" \
-        -device isa-debug-exit,iobase=0xf4,iosize=0x04 \
         -no-reboot \
-        -no-shutdown >/dev/null
+        -no-shutdown > /dev/null 2>"${stderr_log}"
     qemu_status=${PIPESTATUS[1]}
     set -e
 
-    [[ "${qemu_status}" == 33 || "${qemu_status}" == 124 ]] || \
-        fail "完整启动 QEMU 状态码应为 33 或超时 124，实际为 ${qemu_status}"
+    [[ "${qemu_status}" == 124 ]] || fail "完整启动 QEMU 应运行到测试超时，实际状态码为 ${qemu_status}"
     assert_file "${log_path}"
+    assert_file "${stderr_log}"
+    if grep --text --quiet --ignore-case --extended-regexp 'triple fault|cpu reset' "${stderr_log}"; then
+        fail 'QEMU 检测到 triple fault 或 CPU reset'
+    fi
+}
+
+assert_symbol()
+{
+    local symbol="$1"
+
+    nm -g "${kernel_elf}" | awk '{print $3}' | grep --quiet --fixed-strings "${symbol}" || \
+        fail "Kernel ELF 缺少符号: ${symbol}"
 }
 
 line_number()
@@ -126,7 +137,7 @@ grep --quiet --extended-regexp '(^|/)LOADER\.BIN$' <<<"${directory_listing}" || 
 grep --quiet --extended-regexp '(^|/)KERNEL\.BIN$' <<<"${directory_listing}" || fail 'FAT12 根目录缺少 KERNEL.BIN'
 
 success_log="${build_dir}/qemu-success.log"
-run_success_qemu "${disk_image}" "${success_log}"
+run_observed_qemu "${disk_image}" "${success_log}"
 
 boot_line="$(line_number 'Boot OK' "${success_log}")"
 loader_line="$(line_number 'Loader OK' "${success_log}")"
@@ -141,6 +152,22 @@ grep --text --quiet --fixed-strings 'IDT OK' "${success_log}" || fail 'IDT 初�
 grep --text --quiet --fixed-strings 'PIC OK' "${success_log}" || fail 'PIC 初始化没有完成'
 grep --text --quiet --fixed-strings 'TIMER IRQ OK' "${success_log}" || fail 'Timer IRQ 没有触发'
 grep --text --quiet --fixed-strings 'KEYBOARD IRQ OK' "${success_log}" || fail 'Keyboard IRQ 没有触发'
+grep --text --quiet --fixed-strings 'SCHEDULER OK' "${success_log}" || fail '调度器没有完成三任务轮转'
+grep --text --quiet --fixed-strings 'TASK A OK' "${success_log}" || fail 'TaskA 没有运行'
+grep --text --quiet --fixed-strings 'TASK B OK' "${success_log}" || fail 'TaskB 没有运行'
+grep --text --quiet --fixed-strings 'TASK C OK' "${success_log}" || fail 'TaskC 没有运行'
+grep --text --quiet --fixed-strings 'SCHEDULE TaskA' "${success_log}" || fail '调度器没有轮转回 TaskA'
+grep --text --quiet --fixed-strings 'SCHEDULE TaskB' "${success_log}" || fail '调度器没有切换到 TaskB'
+grep --text --quiet --fixed-strings 'SCHEDULE TaskC' "${success_log}" || fail '调度器没有切换到 TaskC'
+
+task_a_line="$(line_number 'TASK A OK' "${success_log}")"
+task_b_line="$(line_number 'TASK B OK' "${success_log}")"
+task_c_line="$(line_number 'TASK C OK' "${success_log}")"
+((task_a_line < task_b_line && task_b_line < task_c_line)) || fail '任务首次运行顺序不是 A -> B -> C'
+
+for symbol in kernel_entry start_first_process task_a task_b task_c schedule proc_table p_proc_ready; do
+    assert_symbol "${symbol}"
+done
 
 missing_loader_image="${build_dir}/missing-loader.img"
 missing_loader_log="${build_dir}/qemu-missing-loader.log"
@@ -168,7 +195,7 @@ mcopy -i "${fragmented_image}" "${loader_binary}" ::LOADER.BIN
 mcopy -i "${fragmented_image}" "${kernel_binary}" ::KERNEL.BIN
 fragmented_chain="$(mshowfat -i "${fragmented_image}" ::LOADER.BIN)"
 grep --quiet --fixed-strings '> <' <<<"${fragmented_chain}" || fail '测试镜像中的 Loader 未形成碎片化簇链'
-run_success_qemu "${fragmented_image}" "${fragmented_log}"
+run_observed_qemu "${fragmented_image}" "${fragmented_log}"
 grep --text --quiet --fixed-strings 'Kernel OK' "${fragmented_log}" || fail '碎片化 Loader 未能完成启动'
 
 printf '[ok] Boot Sector: 512 字节，签名 55aa。\n'
@@ -177,3 +204,4 @@ printf '[ok] 完整启动链已进入保护模式并执行 Kernel。\n'
 printf '[ok] Loader/Kernel 缺失路径均输出明确错误。\n'
 printf '[ok] 碎片化 Loader 已通过 FAT12 簇链正确装载。\n'
 printf '[ok] C 内核、IDT、PIC、Timer IRQ 和 Keyboard IRQ 均已验证。\n'
+printf '[ok] 三个独立任务已完成 A -> B -> C 的抢占式轮转。\n'

@@ -5,9 +5,10 @@ section .text
 extern kernel_main
 extern irq_dispatch
 extern exception_dispatch
-extern test_complete
+extern p_proc_ready
 
 global kernel_entry
+global start_first_process
 global exception_stub_table
 global irq_stub_table
 
@@ -24,11 +25,19 @@ kernel_entry:
 
 .idle:
 	hlt
-	cmp dword [test_complete], 1
-	jne .idle
-	mov al, 0x10
-	out 0xf4, al
 	jmp .idle
+
+; Enter the first task from a pre-built interrupt-return frame.
+start_first_process:
+	mov eax, [p_proc_ready]
+	mov esp, [eax]
+	pop gs
+	pop fs
+	pop es
+	pop ds
+	popad
+	add esp, 4
+	iretd
 
 %macro EXCEPTION_NO_ERROR 1
 global exception%1
@@ -114,18 +123,38 @@ irq_default:
 irq_common:
 	cld
 	pushad
-	push dword [esp + 32]
+	xor eax, eax
+	mov ax, ds
+	push eax
+	xor eax, eax
+	mov ax, es
+	push eax
+	xor eax, eax
+	mov ax, fs
+	push eax
+	xor eax, eax
+	mov ax, gs
+	push eax
+	mov eax, [p_proc_ready]
+	mov [eax], esp
+	push dword [esp + 48]
 	call irq_dispatch
 	add esp, 4
-	popad
-
-	cmp dword [esp], 8
+	mov ecx, [esp + 48]
+	cmp ecx, 8
 	jb .master_eoi
 	mov al, 0x20
 	out 0xa0, al
 .master_eoi:
 	mov al, 0x20
 	out 0x20, al
+	mov eax, [p_proc_ready]
+	mov esp, [eax]
+	pop gs
+	pop fs
+	pop es
+	pop ds
+	popad
 	add esp, 4
 	iretd
 
@@ -144,7 +173,7 @@ exception_stub_table:
 irq_stub_table:
 	dd irq0, irq1, irq_default, irq_default
 	dd irq_default, irq_default, irq_default, irq_default
+	dd irq_default, irq_default, irq_default, irq_default
+	dd irq_default, irq_default, irq_default, irq_default
 
 section .note.GNU-stack noalloc noexec nowrite progbits
-	dd irq_default, irq_default, irq_default, irq_default
-	dd irq_default, irq_default, irq_default, irq_default
