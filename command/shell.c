@@ -1,4 +1,5 @@
 #include "proto.h"
+#include "syscall.h"
 #include "type.h"
 
 static void parse_command(const char *line, char *command, char *argument)
@@ -29,7 +30,27 @@ static void parse_command(const char *line, char *command, char *argument)
 
 void shell_init(void)
 {
+    process_register_program("cat", command_cat);
+    process_register_program("stat", command_stat);
+    process_register_program("rm", command_rm);
     debug_puts("SHELL READY\r\n");
+}
+
+static void run_external(const char *command, const char *argument)
+{
+    int pid = sys_fork();
+    int status;
+
+    if (pid == 0) {
+        if (sys_exec(command, argument) < 0) {
+            sys_exit(127);
+        }
+    }
+    if (pid < 0) {
+        console_write("shell: fork failed\n");
+        return;
+    }
+    sys_wait((u32)pid, &status);
 }
 
 void shell_execute(const char *line)
@@ -49,6 +70,9 @@ void shell_execute(const char *line)
     } else if (string_compare(command, "clear") == 0) {
         console_clear();
         debug_puts("SHELL CLEAR OK\r\n");
+    } else if (string_compare(command, "cat") == 0 || string_compare(command, "stat") == 0 ||
+               string_compare(command, "rm") == 0) {
+        run_external(command, argument);
     } else {
         console_write("Unknown command: ");
         console_write(command);

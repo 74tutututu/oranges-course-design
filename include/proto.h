@@ -33,6 +33,9 @@ void tty_init(void);
 void tty_poll(void);
 void shell_init(void);
 void shell_execute(const char *line);
+void command_cat(void);
+void command_stat(void);
+void command_rm(void);
 void init_system_selftest(void);
 void run_system_selftest(void);
 

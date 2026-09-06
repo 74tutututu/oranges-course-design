@@ -15,8 +15,9 @@ KERNEL_SOURCES := kernel/main.c kernel/pic.c kernel/clock.c kernel/keyboard.c ke
 FS_SOURCES := fs/fs.c
 LIB_SOURCES := lib/string.c lib/syscall.c
 MM_SOURCES := mm/process.c
-COMMAND_SOURCES := command/shell.c
-SYSTEM_SOURCES := $(KERNEL_SOURCES) $(FS_SOURCES) $(LIB_SOURCES) $(MM_SOURCES) $(COMMAND_SOURCES)
+COMMAND_SOURCES := command/shell.c command/commands.c
+SYSTEM_SOURCES := $(KERNEL_SOURCES) $(FS_SOURCES) $(LIB_SOURCES) $(MM_SOURCES) \
+	$(COMMAND_SOURCES)
 KERNEL_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SYSTEM_SOURCES))
 KERNEL_ENTRY_OBJECT := $(BUILD_DIR)/kernel/kernel.o
 KERNEL_IO_OBJECT := $(BUILD_DIR)/kernel/io.o
@@ -80,7 +81,7 @@ test: image ## 执行启动测试
 screenshot: image ## 生成 M6 系统调用截图
 	@mkdir -p "$(dir $(SCREENSHOT))"
 	@rm -f "$(SCREENSHOT)" "$(BUILD_DIR)/screenshot-debug.log"
-	@(sleep 1; printf 'sendkey a\nsendkey b\nsendkey backspace\nsendkey c\nsendkey ret\n'; \
+	@(sleep 1; ./scripts/qemu-send-text.sh help "cat hello.txt"; \
 		sleep 2; printf 'screendump %s -f png\nquit\n' "$(SCREENSHOT)") | \
 		$(QEMU) \
 			-machine accel=tcg \
