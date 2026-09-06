@@ -23,7 +23,7 @@ make check-env
 
 `make check-env` 会检查工具版本，并临时编译、链接一个 32 位 freestanding ELF 探针。只有命令存在但 `gcc -m32` 或 `ld -m elf_i386` 不可用时，自检仍会失败。
 
-## M5 构建和运行
+## M6 构建和运行
 
 在开发容器或安装好依赖的宿主机中运行：
 
@@ -39,9 +39,9 @@ make screenshot
 - `build/loader.bin` 负责 FAT12 内核装载和保护模式切换。
 - `build/kernel.elf` 是入口为 `0x10000` 的 ELF32 C Kernel，`build/kernel.bin` 是供 Loader 装载的平坦二进制。
 - `build/os.img` 是包含 Loader 和 Kernel 的 1.44 MB FAT12 软盘镜像。
-- `make test` 使用 QEMU debugcon 进行无图形启动、Timer/Keyboard IRQ、进程轮转和 TTY 行编辑验证，适用于 CI。
+- `make test` 使用 QEMU debugcon 验证启动、IRQ、调度、TTY、文件系统调用和 `fork/exec/wait` 生命周期，适用于 CI。
 - `make run` 使用 QEMU curses 文本界面显示 BIOS 输出，默认 10 秒后自动结束；可用 `RUN_TIMEOUT=30s` 调整展示时间。
-- `make screenshot` 使用 QEMU monitor 注入 `ab`、退格、`c` 和回车，生成 `assets/screenshots/m5-tty.png`；截图同时展示任务计数与最终输入 `ac`。
+- `make screenshot` 生成 `assets/screenshots/m6-syscalls.png`；截图显示系统调用与进程生命周期自检结果，并注入 `ab`、退格、`c` 和回车验证 TTY。
 
 ## 模拟器约定
 

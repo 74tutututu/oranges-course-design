@@ -23,7 +23,7 @@ void init_system_selftest(void)
 void run_system_selftest(void)
 {
     static const char contents[] = "temporary";
-    static const char console_message[] = "M6 file syscalls ready.\n";
+    static const char console_message[] = "M6 syscalls and process lifecycle ready.\n";
     char buffer[16];
     FILE_STAT stat;
     int fd;
@@ -60,7 +60,6 @@ void run_system_selftest(void)
         return;
     }
 
-    sys_write(FS_STDOUT, console_message, sizeof(console_message) - 1);
     debug_puts("FS SYSCALLS OK\r\n");
 
     pid = sys_fork();
@@ -78,5 +77,6 @@ void run_system_selftest(void)
         debug_puts("FORK EXEC WAIT FAIL\r\n");
         return;
     }
+    sys_write(FS_STDOUT, console_message, sizeof(console_message) - 1);
     debug_puts("FORK EXEC WAIT OK\r\n");
 }

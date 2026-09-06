@@ -11,6 +11,12 @@
 | 2026-09-05 | 徐千顺 | 实现三个内核级任务、独立任务栈、Timer 抢占式轮转和上下文恢复 | `include/proc.h`、`kernel/proc.c`、`kernel/kernel.asm` | `make docker-test`、`assets/screenshots/m4-processes.png` |
 | 2026-09-06 | 赵晴 | 实现扫描码翻译、Shift/Caps Lock 状态和 IRQ 到任务的键盘环形缓冲 | `5e55e2c` | `make test`、日志 `KEY a` |
 | 2026-09-06 | 赵晴 | 实现 VGA 文本控制台、TTY 回显、退格、行提交与滚屏 | `0ad08bf` | `make test`、`assets/screenshots/m5-tty.png` |
+| 2026-09-06 | 赵晴 | 实现 `int 0x80` 调用门、用户封装和 RAM 文件系统基础操作 | `3dfaf33` | `make test`、日志 `FS SYSCALLS OK` |
+| 2026-09-06 | 赵晴 | 实现动态进程槽位、fork 栈复制、exec 入口替换、wait 阻塞与退出唤醒 | `52338a8` | `make test`、`assets/screenshots/m6-syscalls.png` |
+
+## 问题与解决记录
+
+- M6 首次实现 `fork` 时只复制了栈内容和中断返回现场，子进程恢复后的 EBP 仍指向父栈，表现为子进程被反复调度但无法进入 `exec`。最终在复制栈后沿保存的调用帧链重定位 EBP，QEMU 日志恢复为 `forked -> EXEC CHILD OK -> TaskA -> FORK EXEC WAIT OK`。
 
 ## 记录要求
 
