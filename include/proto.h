@@ -9,6 +9,7 @@ void init_idt(void);
 void init_pic(void);
 void init_timer(void);
 void init_keyboard(void);
+int keyboard_getchar(void);
 void irq_dispatch(u32 irq);
 void exception_dispatch(u32 vector);
 void spurious_irq(u32 irq);

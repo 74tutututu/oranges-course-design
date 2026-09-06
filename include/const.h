@@ -18,6 +18,7 @@
 #define HZ 100
 
 #define KB_DATA 0x60
+#define KEYBOARD_BUFFER_SIZE 128
 
 #define V_MEM_BASE 0xb8000
 #define VGA_COLUMNS 80
