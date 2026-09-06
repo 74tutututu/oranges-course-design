@@ -9,6 +9,8 @@
 | 2026-08-18 | 徐千顺 | 实现 FAT12 Loader、保护模式切换和最小 32 位 Kernel | `boot/loader.asm`、`kernel/kernel.asm` | `make docker-test`、`assets/screenshots/m2-protected-mode.png` |
 | 2026-08-19 | 徐千顺 | 实现 C 内核入口、IDT、8259A PIC、PIT Timer IRQ 和 Keyboard IRQ | `kernel/*.c`、`kernel/kernel.asm`、`kernel/linker.ld` | `make docker-test`、`assets/screenshots/m3-interrupts.png` |
 | 2026-09-05 | 徐千顺 | 实现三个内核级任务、独立任务栈、Timer 抢占式轮转和上下文恢复 | `include/proc.h`、`kernel/proc.c`、`kernel/kernel.asm` | `make docker-test`、`assets/screenshots/m4-processes.png` |
+| 2026-09-06 | 赵晴 | 实现扫描码翻译、Shift/Caps Lock 状态和 IRQ 到任务的键盘环形缓冲 | `5e55e2c` | `make test`、日志 `KEY a` |
+| 2026-09-06 | 赵晴 | 实现 VGA 文本控制台、TTY 回显、退格、行提交与滚屏 | `0ad08bf` | `make test`、`assets/screenshots/m5-tty.png` |
 
 ## 记录要求
 
