@@ -10,7 +10,8 @@ BOOT_BINARY := $(BUILD_DIR)/boot.bin
 LOADER_SOURCE := boot/loader.asm
 LOADER_BINARY := $(BUILD_DIR)/loader.bin
 KERNEL_SOURCE := kernel/kernel.asm
-KERNEL_SOURCES := kernel/main.c kernel/pic.c kernel/clock.c kernel/keyboard.c kernel/interrupt.c kernel/proc.c
+KERNEL_SOURCES := kernel/main.c kernel/pic.c kernel/clock.c kernel/keyboard.c kernel/interrupt.c kernel/proc.c \
+	kernel/console.c kernel/tty.c
 KERNEL_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(KERNEL_SOURCES))
 KERNEL_ENTRY_OBJECT := $(BUILD_DIR)/kernel/kernel.o
 KERNEL_IO_OBJECT := $(BUILD_DIR)/kernel/io.o

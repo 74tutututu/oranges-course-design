@@ -72,6 +72,10 @@ run_observed_qemu()
     (
         sleep 1
         printf 'sendkey a\n'
+        printf 'sendkey b\n'
+        printf 'sendkey backspace\n'
+        printf 'sendkey c\n'
+        printf 'sendkey ret\n'
         sleep 5
     ) | timeout --signal=TERM 6s \
         qemu-system-i386 \
@@ -153,6 +157,9 @@ grep --text --quiet --fixed-strings 'PIC OK' "${success_log}" || fail 'PIC 初�
 grep --text --quiet --fixed-strings 'TIMER IRQ OK' "${success_log}" || fail 'Timer IRQ 没有触发'
 grep --text --quiet --fixed-strings 'KEYBOARD IRQ OK' "${success_log}" || fail 'Keyboard IRQ 没有触发'
 grep --text --quiet --fixed-strings 'KEY a' "${success_log}" || fail '键盘扫描码没有转换为字符'
+grep --text --quiet --fixed-strings 'TTY READY' "${success_log}" || fail 'TTY 没有完成初始化'
+grep --text --quiet --fixed-strings 'TTY LINE ac' "${success_log}" || fail 'TTY 行编辑或回车提交失败'
+grep --text --quiet --fixed-strings 'TTY OK' "${success_log}" || fail 'TTY 行输入没有完成'
 grep --text --quiet --fixed-strings 'SCHEDULER OK' "${success_log}" || fail '调度器没有完成三任务轮转'
 grep --text --quiet --fixed-strings 'TASK A OK' "${success_log}" || fail 'TaskA 没有运行'
 grep --text --quiet --fixed-strings 'TASK B OK' "${success_log}" || fail 'TaskB 没有运行'
@@ -206,4 +213,5 @@ printf '[ok] Loader/Kernel 缺失路径均输出明确错误。\n'
 printf '[ok] 碎片化 Loader 已通过 FAT12 簇链正确装载。\n'
 printf '[ok] C 内核、IDT、PIC、Timer IRQ 和 Keyboard IRQ 均已验证。\n'
 printf '[ok] 键盘扫描码已转换并写入字符缓冲区。\n'
+printf '[ok] TTY 已完成字符回显、行输入和回车提交。\n'
 printf '[ok] 三个独立任务已完成 A -> B -> C 的抢占式轮转。\n'

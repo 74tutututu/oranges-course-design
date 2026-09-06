@@ -21,10 +21,16 @@ void process_timer_tick(void);
 void task_a(void);
 void task_b(void);
 void task_c(void);
+void tty_init(void);
+void tty_poll(void);
 
 void screen_clear(void);
 void screen_puts(u32 row, u32 column, const char *text, u8 color);
 void screen_put_u32(u32 row, u32 column, const char *label, u32 value, u8 color);
+void console_init(void);
+void console_clear(void);
+void console_putc(char character);
+void console_write(const char *text);
 void debug_puts(const char *text);
 
 void out_byte(u16 port, u8 value);

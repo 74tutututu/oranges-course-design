@@ -23,6 +23,14 @@
 #define V_MEM_BASE 0xb8000
 #define VGA_COLUMNS 80
 #define VGA_ROWS 25
+#define CONSOLE_FIRST_ROW 18
+
+#define CRTC_ADDR_REG 0x3d4
+#define CRTC_DATA_REG 0x3d5
+#define CRTC_CURSOR_HIGH 0x0e
+#define CRTC_CURSOR_LOW 0x0f
+
+#define TTY_LINE_SIZE 64
 
 #define DEBUG_PORT 0xe9
 #define EXIT_PORT 0xf4

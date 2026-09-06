@@ -132,6 +132,7 @@ void kernel_main(void)
 
     init_timer();
     init_keyboard();
+    tty_init();
     screen_puts(10, 0, "Current task: TaskA", 0x0f);
     screen_put_u32(12, 0, "TaskA runs: ", 0, 0x0f);
     screen_put_u32(13, 0, "TaskB runs: ", 0, 0x0f);
