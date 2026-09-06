@@ -94,6 +94,8 @@ void init_idt(void)
     for (i = 0; i < NR_IRQ; i++) {
         set_idt_gate(INT_VECTOR_IRQ0 + i, irq_stub_table[i]);
     }
+    set_idt_gate(INT_VECTOR_SYS_CALL, (u32)syscall_entry);
+    idt[INT_VECTOR_SYS_CALL].attr = DA_386IGATE_USER;
 
     idt_ptr[0] = (u8)((sizeof(idt) - 1) & 0xff);
     idt_ptr[1] = (u8)(((sizeof(idt) - 1) >> 8) & 0xff);
@@ -113,6 +115,8 @@ void kernel_main(void)
     keyboard_irq_count = 0;
     last_scan_code = 0;
     init_processes();
+    fs_init();
+    init_system_selftest();
     for (i = 0; i < NR_IRQ; i++) {
         irq_table[i] = spurious_irq;
     }

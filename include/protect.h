@@ -15,6 +15,7 @@ struct gate {
 #define SELECTOR_KERNEL_DS 0x10
 
 #define DA_386IGATE 0x8e
+#define DA_386IGATE_USER 0xee
 #define PRIVILEGE_KERNEL 0
 
 #endif

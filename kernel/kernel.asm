@@ -6,11 +6,13 @@ extern kernel_main
 extern irq_dispatch
 extern exception_dispatch
 extern p_proc_ready
+extern syscall_dispatch
 
 global kernel_entry
 global start_first_process
 global exception_stub_table
 global irq_stub_table
+global syscall_entry
 
 kernel_entry:
 	mov ax, 0x10
@@ -29,6 +31,36 @@ kernel_entry:
 
 ; Enter the first task from a pre-built interrupt-return frame.
 start_first_process:
+	mov eax, [p_proc_ready]
+	mov esp, [eax]
+	pop gs
+	pop fs
+	pop es
+	pop ds
+	popad
+	add esp, 4
+	iretd
+
+syscall_entry:
+	push dword 0
+	pushad
+	xor eax, eax
+	mov ax, ds
+	push eax
+	xor eax, eax
+	mov ax, es
+	push eax
+	xor eax, eax
+	mov ax, fs
+	push eax
+	xor eax, eax
+	mov ax, gs
+	push eax
+	mov eax, [p_proc_ready]
+	mov [eax], esp
+	push esp
+	call syscall_dispatch
+	add esp, 4
 	mov eax, [p_proc_ready]
 	mov esp, [eax]
 	pop gs

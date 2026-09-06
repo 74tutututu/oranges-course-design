@@ -121,6 +121,7 @@ void task_a(void)
 {
     while (1) {
         task_step(0, 'A');
+        run_system_selftest();
         tty_poll();
     }
 }

@@ -2,6 +2,7 @@
 #define ORANGES_PROTO_H
 
 #include "type.h"
+#include "fs.h"
 #include "proc.h"
 
 void kernel_main(void);
@@ -23,6 +24,19 @@ void task_b(void);
 void task_c(void);
 void tty_init(void);
 void tty_poll(void);
+void init_system_selftest(void);
+void run_system_selftest(void);
+
+void fs_init(void);
+int fs_open(u32 owner, const char *path, u32 flags);
+int fs_read(u32 owner, int fd, char *buffer, u32 count);
+int fs_write(u32 owner, int fd, const char *buffer, u32 count);
+int fs_close(u32 owner, int fd);
+int fs_stat(const char *path, FILE_STAT *stat);
+int fs_unlink(const char *path);
+void fs_close_process(u32 owner);
+
+void syscall_dispatch(STACK_FRAME *frame);
 
 void screen_clear(void);
 void screen_puts(u32 row, u32 column, const char *text, u8 color);
@@ -32,6 +46,10 @@ void console_clear(void);
 void console_putc(char character);
 void console_write(const char *text);
 void debug_puts(const char *text);
+
+u32 string_length(const char *text);
+int string_compare(const char *left, const char *right);
+void string_copy(char *destination, const char *source, u32 capacity);
 
 void out_byte(u16 port, u8 value);
 u8 in_byte(u16 port);
@@ -73,6 +91,7 @@ extern void exception31(void);
 extern void irq0(void);
 extern void irq1(void);
 extern void irq_default(void);
+extern void syscall_entry(void);
 extern void start_first_process(void);
 
 #endif

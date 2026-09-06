@@ -1,0 +1,27 @@
+#ifndef ORANGES_SYSCALL_H
+#define ORANGES_SYSCALL_H
+
+#include "fs.h"
+#include "type.h"
+
+#define SYS_WRITE 0
+#define SYS_OPEN 1
+#define SYS_READ 2
+#define SYS_CLOSE 3
+#define SYS_STAT 4
+#define SYS_UNLINK 5
+
+#define SYS_ERR_NOENT -2
+#define SYS_ERR_BADF -9
+#define SYS_ERR_BUSY -16
+#define SYS_ERR_INVAL -22
+#define SYS_ERR_NOSPC -28
+
+int sys_write(int fd, const char *buffer, u32 count);
+int sys_open(const char *path, u32 flags);
+int sys_read(int fd, char *buffer, u32 count);
+int sys_close(int fd);
+int sys_stat(const char *path, FILE_STAT *stat);
+int sys_unlink(const char *path);
+
+#endif

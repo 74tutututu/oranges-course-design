@@ -11,8 +11,11 @@ LOADER_SOURCE := boot/loader.asm
 LOADER_BINARY := $(BUILD_DIR)/loader.bin
 KERNEL_SOURCE := kernel/kernel.asm
 KERNEL_SOURCES := kernel/main.c kernel/pic.c kernel/clock.c kernel/keyboard.c kernel/interrupt.c kernel/proc.c \
-	kernel/console.c kernel/tty.c
-KERNEL_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(KERNEL_SOURCES))
+	kernel/console.c kernel/tty.c kernel/syscall.c kernel/selftest.c
+FS_SOURCES := fs/fs.c
+LIB_SOURCES := lib/string.c lib/syscall.c
+SYSTEM_SOURCES := $(KERNEL_SOURCES) $(FS_SOURCES) $(LIB_SOURCES)
+KERNEL_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SYSTEM_SOURCES))
 KERNEL_ENTRY_OBJECT := $(BUILD_DIR)/kernel/kernel.o
 KERNEL_IO_OBJECT := $(BUILD_DIR)/kernel/io.o
 KERNEL_ELF := $(BUILD_DIR)/kernel.elf
@@ -109,7 +112,8 @@ $(KERNEL_IO_OBJECT): kernel/io.asm
 	@mkdir -p "$(dir $@)"
 	$(NASM) -f elf32 -o "$@" "$<"
 
-$(BUILD_DIR)/kernel/%.o: kernel/%.c include/type.h include/const.h include/protect.h include/global.h include/proto.h
+$(BUILD_DIR)/%.o: %.c include/type.h include/const.h include/protect.h include/global.h include/proto.h \
+	include/fs.h include/syscall.h
 	@mkdir -p "$(dir $@)"
 	$(GCC) -m32 -ffreestanding -fno-pie -fno-stack-protector -fno-builtin -fno-asynchronous-unwind-tables -fno-unwind-tables -nostdinc -Wall -Wextra -Iinclude -c -o "$@" "$<"
 
