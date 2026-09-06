@@ -1,6 +1,6 @@
 # 计划架构
 
-本文件描述目标结构、当前启动链和模块责任。M6 已在 TTY 之上形成文件系统调用和动态子进程生命周期。
+本文件描述目标结构、当前启动链和模块责任。M7 已在 TTY、文件系统调用和动态进程基础上形成交互式 Shell。
 
 ## 启动与运行链路
 
@@ -96,6 +96,21 @@ lib/syscall.c 封装
 系统调用号 0 至 5 依次为 `write/open/read/close/stat/unlink`。RAM FS 最多保存 8 个命名文件，每个文件上限 512 字节；文件描述符从 3 开始，记录所有者、文件位置和打开标志。系统启动时提供 `readme.txt` 与 `hello.txt`，内容不写回 FAT12 启动盘。
 
 调用号 6 至 9 依次为 `fork/exec/wait/exit`。进程表有 8 个槽位，其中前三个保留 M4 常驻任务。`fork` 复制当前 8 KiB 任务栈和系统调用现场，并重定位保存的 EBP 调用帧链；`exec` 将 IRET 返回地址替换为注册程序入口；`wait` 将父进程置为阻塞态，子进程 `exit` 后写回状态、唤醒父进程并回收槽位。
+
+## M7 Shell 与命令
+
+```text
+TTY 回车提交
+  -> shell_execute() 分离命令名与单个文件参数
+  -> help / clear 在 Shell 进程内执行
+  -> cat / stat / rm 执行 fork()
+       -> 子进程 exec() 到注册入口
+       -> 命令通过 open/read/write/stat/unlink 系统调用工作
+       -> exit() 唤醒 wait() 中的 Shell
+  -> 输出下一条 OrangeS> 提示符
+```
+
+`command/shell.c` 只负责解析、内建命令和进程启动，`command/commands.c` 不访问 FS 内部表。`cat` 分块读取并写到标准输出，`stat` 展示 inode 与字节数，`rm` 报告删除结果；缺少参数和文件不存在都有可见提示。
 
 ## 模块边界
 

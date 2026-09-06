@@ -13,6 +13,9 @@
 | 2026-09-06 | 赵晴 | 实现 VGA 文本控制台、TTY 回显、退格、行提交与滚屏 | `0ad08bf` | `make test`、`assets/screenshots/m5-tty.png` |
 | 2026-09-06 | 赵晴 | 实现 `int 0x80` 调用门、用户封装和 RAM 文件系统基础操作 | `3dfaf33` | `make test`、日志 `FS SYSCALLS OK` |
 | 2026-09-06 | 赵晴 | 实现动态进程槽位、fork 栈复制、exec 入口替换、wait 阻塞与退出唤醒 | `52338a8` | `make test`、`assets/screenshots/m6-syscalls.png` |
+| 2026-09-06 | 赵晴 | 实现 Shell 行解析、`help`、`clear` 与未知命令提示 | `01acdeb` | `make test`、日志 `SHELL HELP/CLEAR/UNKNOWN OK` |
+| 2026-09-06 | 赵晴 | 实现经 fork/exec/wait 启动的 `cat`、`stat`、`rm` 命令 | `0a1cc1f` | `make test`、`assets/screenshots/m7-shell.png` |
+| 2026-09-06 | 赵晴 | 清理动态进程名显示残影并稳定 QEMU 键盘注入时序 | `182349f` | `make test`、`assets/screenshots/m7-shell.png` |
 
 ## 问题与解决记录
 

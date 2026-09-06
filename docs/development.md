@@ -23,7 +23,7 @@ make check-env
 
 `make check-env` 会检查工具版本，并临时编译、链接一个 32 位 freestanding ELF 探针。只有命令存在但 `gcc -m32` 或 `ld -m elf_i386` 不可用时，自检仍会失败。
 
-## M6 构建和运行
+## M7 构建和运行
 
 在开发容器或安装好依赖的宿主机中运行：
 
@@ -39,9 +39,22 @@ make screenshot
 - `build/loader.bin` 负责 FAT12 内核装载和保护模式切换。
 - `build/kernel.elf` 是入口为 `0x10000` 的 ELF32 C Kernel，`build/kernel.bin` 是供 Loader 装载的平坦二进制。
 - `build/os.img` 是包含 Loader 和 Kernel 的 1.44 MB FAT12 软盘镜像。
-- `make test` 使用 QEMU debugcon 验证启动、IRQ、调度、TTY、文件系统调用和 `fork/exec/wait` 生命周期，适用于 CI。
+- `make test` 使用 QEMU debugcon 验证启动、IRQ、调度、TTY、系统调用、进程生命周期和全部 Shell 命令，适用于 CI。
 - `make run` 使用 QEMU curses 文本界面显示 BIOS 输出，默认 10 秒后自动结束；可用 `RUN_TIMEOUT=30s` 调整展示时间。
-- `make screenshot` 生成 `assets/screenshots/m6-syscalls.png`；截图显示系统调用与进程生命周期自检结果，并注入 `ab`、退格、`c` 和回车验证 TTY。
+- `make screenshot` 通过 `scripts/qemu-send-text.sh` 注入 `help` 和 `cat hello.txt`，生成 `assets/screenshots/m7-shell.png`。
+
+启动后可手工执行：
+
+```text
+help
+clear
+cat readme.txt
+stat hello.txt
+rm hello.txt
+stat hello.txt
+```
+
+最后一次 `stat` 应输出 `stat: file not found`，用于证明删除结果和错误路径。
 
 ## 模拟器约定
 

@@ -7,7 +7,7 @@
 - 课程：操作系统课程设计
 - 小组成员：徐千顺、赵晴
 - 参考方向：OrangeS `chapter11/c`
-- 当前阶段：M6 文件系统与系统调用已完成，下一阶段为 M7 Shell 与命令扩展
+- 当前阶段：M7 Shell 与命令扩展已完成，下一阶段为 M8 回归与交付
 - 主要模拟器：QEMU；Bochs 作为可选调试工具
 
 当前仓库不包含 OrangeS 参考源码或预生成磁盘镜像。Boot Sector、Loader、C 内核、中断和进程调度均为小组自主实现；后续代码应按照路线图逐步实现，并明确记录参考来源和小组贡献。
@@ -23,7 +23,7 @@ make docker-test
 make docker-shell
 ```
 
-进入开发容器后，可以构建并在 QEMU 终端界面启动 M6 镜像：
+进入开发容器后，可以构建并在 QEMU 终端界面启动 M7 镜像：
 
 ```bash
 make image
@@ -41,9 +41,9 @@ make check-env
 
 具体依赖和运行方式见 [开发指南](docs/development.md)。
 
-## M6 启动结果
+## M7 启动结果
 
-系统使用标准 1.44 MB FAT12 镜像。Boot Sector 从根目录装载 `LOADER.BIN`，Loader 再装载 `KERNEL.BIN`、开启 A20、建立 GDT 并进入 32 位保护模式。Kernel 在 M5 TTY 上增加 `int 0x80` 调用门、RAM 文件系统和动态子进程：
+系统使用标准 1.44 MB FAT12 镜像。Boot Sector 从根目录装载 `LOADER.BIN`，Loader 再装载 `KERNEL.BIN`、开启 A20、建立 GDT 并进入 32 位保护模式。M7 在 TTY、系统调用和 RAM FS 上提供交互式 Shell：
 
 ```text
 OrangeS Course Design
@@ -67,13 +67,26 @@ SYSCALL INT OK
 FS SYSCALLS OK
 EXEC CHILD OK
 FORK EXEC WAIT OK
+SHELL READY
+SHELL HELP OK
+SHELL CLEAR OK
+COMMAND CAT OK
+COMMAND STAT OK
+COMMAND RM OK
 ```
 
-![M6 系统调用与进程生命周期结果](assets/screenshots/m6-syscalls.png)
+![M7 Shell 与命令结果](assets/screenshots/m7-shell.png)
 
 `make test` 会检查引导签名、FAT12 文件、碎片化簇链、启动顺序以及 Loader/Kernel 缺失路径，并通过 QEMU debugcon 验证 Kernel 确实在保护模式下执行。
 
-M6 提供 `open/read/write/close/stat/unlink` 系统调用和 8 文件、每文件 512 字节的内存文件系统。进程表保留三个常驻任务并增加五个动态槽位；`fork` 复制任务栈和返回现场，`exec` 切换到注册程序入口，`wait` 阻塞父进程直至子进程退出。当前文件系统为断电即失的 RAM FS，用户程序仍与内核链接在同一 Ring 0 地址空间。
+Shell 内建 `help`、`clear` 和未知命令提示。`cat`、`stat`、`rm` 是注册程序，Shell 使用 `fork/exec/wait` 启动，程序仅通过 M6 系统调用读写控制台和文件。当前文件系统为断电即失的 RAM FS，命令程序仍与内核链接在同一 Ring 0 地址空间。
+
+```text
+OrangeS> help
+OrangeS> cat hello.txt
+OrangeS> stat hello.txt
+OrangeS> rm hello.txt
+```
 
 ## 目录结构
 
