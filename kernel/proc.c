@@ -90,6 +90,7 @@ void schedule(void)
     schedule_count++;
 
     screen_puts(10, 0, "Current task: ", 0x0f);
+    screen_puts(10, 14, "                ", 0x0f);
     screen_puts(10, 14, p_proc_ready->name, 0x0f);
 
     debug_puts("SCHEDULE ");

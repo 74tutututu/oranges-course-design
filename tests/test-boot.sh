@@ -71,23 +71,19 @@ run_observed_qemu()
     set +e
     (
         sleep 1
-        printf 'sendkey a\n'
-        printf 'sendkey b\n'
-        printf 'sendkey backspace\n'
-        printf 'sendkey c\n'
-        printf 'sendkey ret\n'
-        printf 'sendkey h\n'
-        printf 'sendkey e\n'
-        printf 'sendkey l\n'
-        printf 'sendkey p\n'
-        printf 'sendkey ret\n'
-        printf 'sendkey c\n'
-        printf 'sendkey l\n'
-        printf 'sendkey e\n'
-        printf 'sendkey a\n'
-        printf 'sendkey r\n'
-        printf 'sendkey ret\n'
+        printf 'sendkey a 20\n'
+        sleep 0.03
+        printf 'sendkey b 20\n'
+        sleep 0.03
+        printf 'sendkey backspace 20\n'
+        sleep 0.03
+        printf 'sendkey c 20\n'
+        sleep 0.03
+        printf 'sendkey ret 20\n'
+        sleep 0.1
         "${root_dir}/scripts/qemu-send-text.sh" \
+            'help' \
+            'clear' \
             'cat hello.txt' \
             'stat hello.txt' \
             'rm hello.txt' \

@@ -19,8 +19,8 @@ for text in "$@"; do
                 key="${character}"
                 ;;
         esac
-        printf 'sendkey %s\n' "${key}"
-        sleep 0.02
+        printf 'sendkey %s 20\n' "${key}"
+        sleep 0.03
     done
     printf 'sendkey ret\n'
     sleep 0.1
