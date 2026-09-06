@@ -17,6 +17,7 @@ required_commands=(
     mformat
     mdir
     mshowfat
+    pandoc
     qemu-system-i386
 )
 
@@ -39,6 +40,7 @@ printf '[info] LD: %s\n' "$(ld --version | sed -n '1p')"
 printf '[info] Make: %s\n' "$(make --version | sed -n '1p')"
 printf '[info] mtools: %s\n' "$(mcopy -V 2>&1 | sed -n '1p')"
 printf '[info] QEMU: %s\n' "$(qemu-system-i386 --version | sed -n '1p')"
+printf '[info] Pandoc: %s\n' "$(pandoc --version | sed -n '1p')"
 
 probe_dir="$(mktemp -d)"
 trap 'rm -rf "${probe_dir}"' EXIT

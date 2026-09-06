@@ -11,6 +11,7 @@ RUN apt-get update \
         make \
         mtools \
         nasm \
+        pandoc \
         qemu-system-x86 \
     && rm -rf /var/lib/apt/lists/*
 

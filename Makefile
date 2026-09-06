@@ -31,9 +31,13 @@ GCC ?= gcc
 LD ?= ld
 OBJCOPY ?= objcopy
 QEMU ?= qemu-system-i386
+PANDOC ?= pandoc
 RUN_TIMEOUT ?= 10s
+REPORT_SOURCE := docs/report.md
+REPORT_DOCX := docs/OrangeS-course-design-report.docx
 
-.PHONY: help build image run test screenshot clean check-env docker-build docker-check docker-test docker-screenshot docker-shell
+.PHONY: help build image run test screenshot report clean check-env docker-build docker-check docker-test docker-screenshot \
+	docker-report docker-shell
 
 help: ## 显示可用命令
 	@printf '%s\n' \
@@ -44,6 +48,7 @@ help: ## 显示可用命令
 		'  make run           在 QEMU 终端界面启动系统' \
 		'  make test          验证 FAT12 和完整启动链' \
 		'  make screenshot    生成最终进程信息截图' \
+		'  make report        生成课程设计 Word 报告' \
 		'  make clean         删除构建产物' \
 		'' \
 		'  make check-env     检查本机 32 位操作系统开发工具链' \
@@ -95,6 +100,11 @@ screenshot: image ## 生成最终进程信息截图
 			-no-shutdown
 	@test -s "$(SCREENSHOT)"
 	@printf '已生成 %s\n' "$(SCREENSHOT)"
+
+report: $(REPORT_DOCX) ## 生成课程设计 Word 报告
+
+$(REPORT_DOCX): $(REPORT_SOURCE) assets/screenshots/m8-final.png
+	$(PANDOC) --from=markdown --to=docx --toc --resource-path=docs -o "$@" "$<"
 
 clean: ## 删除构建产物
 	rm -rf "$(BUILD_DIR)"
@@ -167,6 +177,15 @@ docker-screenshot: ## 在容器中生成启动截图
 		--workdir /workspace \
 		$(DOCKER_IMAGE) \
 		make screenshot
+
+docker-report: ## 在容器中生成 Word 报告
+	docker run --rm \
+		--user "$(HOST_UID):$(HOST_GID)" \
+		--env HOME=/tmp \
+		--volume "$(ROOT_DIR):/workspace" \
+		--workdir /workspace \
+		$(DOCKER_IMAGE) \
+		make report
 
 docker-shell: ## 进入开发容器
 	docker run --rm --interactive --tty \
