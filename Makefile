@@ -25,7 +25,7 @@ KERNEL_ELF := $(BUILD_DIR)/kernel.elf
 KERNEL_BINARY := $(BUILD_DIR)/kernel.bin
 KERNEL_LINKER := kernel/linker.ld
 DISK_IMAGE := $(BUILD_DIR)/os.img
-SCREENSHOT := assets/screenshots/m7-shell.png
+SCREENSHOT := assets/screenshots/m8-final.png
 NASM ?= nasm
 GCC ?= gcc
 LD ?= ld
@@ -43,7 +43,7 @@ help: ## 显示可用命令
 		'  make image         生成 FAT12 启动软盘镜像' \
 		'  make run           在 QEMU 终端界面启动系统' \
 		'  make test          验证 FAT12 和完整启动链' \
-		'  make screenshot    生成 M7 Shell 截图' \
+		'  make screenshot    生成最终进程信息截图' \
 		'  make clean         删除构建产物' \
 		'' \
 		'  make check-env     检查本机 32 位操作系统开发工具链' \
@@ -78,10 +78,10 @@ test: image ## 执行启动测试
 		"$(KERNEL_BINARY)" \
 		"$(DISK_IMAGE)"
 
-screenshot: image ## 生成 M7 Shell 截图
+screenshot: image ## 生成最终进程信息截图
 	@mkdir -p "$(dir $(SCREENSHOT))"
 	@rm -f "$(SCREENSHOT)" "$(BUILD_DIR)/screenshot-debug.log"
-	@(sleep 1; ./scripts/qemu-send-text.sh help "cat hello.txt"; \
+	@(sleep 1; ./scripts/qemu-send-text.sh ps; \
 		sleep 2; printf 'screendump %s -f png\nquit\n' "$(SCREENSHOT)") | \
 		$(QEMU) \
 			-machine accel=tcg \

@@ -88,9 +88,11 @@ run_observed_qemu()
             'cat hello.txt' \
             'stat hello.txt' \
             'rm hello.txt' \
-            'stat hello.txt'
-        sleep 5
-    ) | timeout --signal=TERM 6s \
+            'stat hello.txt' \
+            'cat missing.txt' \
+            'rm missing.txt'
+        sleep 7
+    ) | timeout --signal=TERM 8s \
         qemu-system-i386 \
         -machine accel=tcg \
         -drive "file=${image_path},format=raw,if=floppy" \
@@ -178,8 +180,10 @@ grep --text --quiet --fixed-strings 'SHELL UNKNOWN OK' "${success_log}" || fail 
 grep --text --quiet --fixed-strings 'SHELL HELP OK' "${success_log}" || fail 'Shell help 没有执行'
 grep --text --quiet --fixed-strings 'SHELL CLEAR OK' "${success_log}" || fail 'Shell clear 没有执行'
 grep --text --quiet --fixed-strings 'COMMAND CAT OK' "${success_log}" || fail 'cat 命令没有读取文件'
+grep --text --quiet --fixed-strings 'COMMAND CAT NOENT' "${success_log}" || fail 'cat 不存在文件时没有报错'
 grep --text --quiet --fixed-strings 'COMMAND STAT OK' "${success_log}" || fail 'stat 命令没有输出文件信息'
 grep --text --quiet --fixed-strings 'COMMAND RM OK' "${success_log}" || fail 'rm 命令没有删除文件'
+grep --text --quiet --fixed-strings 'COMMAND RM FAIL' "${success_log}" || fail 'rm 不存在文件时没有报错'
 grep --text --quiet --fixed-strings 'COMMAND STAT NOENT' "${success_log}" || fail '删除后的 stat 没有返回不存在'
 grep --text --quiet --fixed-strings 'COMMAND PS OK' "${success_log}" || fail 'ps 命令没有输出进程快照'
 grep --text --quiet --fixed-strings 'SYSCALL INT OK' "${success_log}" || fail 'int 0x80 系统调用入口没有执行'
@@ -246,5 +250,6 @@ printf '[ok] int 0x80 文件系统调用已完成创建、写入、读取、stat
 printf '[ok] fork/exec/wait 已通过动态进程槽位、栈复制、阻塞和退出唤醒验证。\n'
 printf '[ok] Shell 已验证 help、clear 和未知命令提示。\n'
 printf '[ok] cat、stat、rm 已通过 fork/exec/wait 和文件系统调用完成验证。\n'
+printf '[ok] cat、stat、rm 的文件不存在路径已完成验证。\n'
 printf '[ok] ps 已通过只读进程快照系统调用完成验证。\n'
 printf '[ok] 三个独立任务已完成 A -> B -> C 的抢占式轮转。\n'
