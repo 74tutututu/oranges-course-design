@@ -14,7 +14,8 @@ extern u8 idt_ptr[6];
 extern irq_handler irq_table[NR_IRQ];
 extern PROCESS proc_table[NR_PROCS];
 extern PROCESS *p_proc_ready;
+extern u32 task_stacks[TASK_STACK_TOTAL / sizeof(u32)];
 extern volatile u32 schedule_count;
-extern volatile u32 task_run_count[NR_PROCS];
+extern volatile u32 task_run_count[NR_BOOT_PROCS];
 
 #endif

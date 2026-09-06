@@ -115,6 +115,7 @@ void kernel_main(void)
     keyboard_irq_count = 0;
     last_scan_code = 0;
     init_processes();
+    init_process_service();
     fs_init();
     init_system_selftest();
     for (i = 0; i < NR_IRQ; i++) {

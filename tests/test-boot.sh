@@ -162,6 +162,8 @@ grep --text --quiet --fixed-strings 'TTY LINE ac' "${success_log}" || fail 'TTY 
 grep --text --quiet --fixed-strings 'TTY OK' "${success_log}" || fail 'TTY 行输入没有完成'
 grep --text --quiet --fixed-strings 'SYSCALL INT OK' "${success_log}" || fail 'int 0x80 系统调用入口没有执行'
 grep --text --quiet --fixed-strings 'FS SYSCALLS OK' "${success_log}" || fail '文件系统调用回归失败'
+grep --text --quiet --fixed-strings 'EXEC CHILD OK' "${success_log}" || fail 'exec 没有运行注册程序'
+grep --text --quiet --fixed-strings 'FORK EXEC WAIT OK' "${success_log}" || fail 'fork/exec/wait 生命周期回归失败'
 grep --text --quiet --fixed-strings 'SCHEDULER OK' "${success_log}" || fail '调度器没有完成三任务轮转'
 grep --text --quiet --fixed-strings 'TASK A OK' "${success_log}" || fail 'TaskA 没有运行'
 grep --text --quiet --fixed-strings 'TASK B OK' "${success_log}" || fail 'TaskB 没有运行'
@@ -175,8 +177,8 @@ task_b_line="$(line_number 'TASK B OK' "${success_log}")"
 task_c_line="$(line_number 'TASK C OK' "${success_log}")"
 ((task_a_line < task_b_line && task_b_line < task_c_line)) || fail '任务首次运行顺序不是 A -> B -> C'
 
-for symbol in kernel_entry start_first_process syscall_entry syscall_dispatch fs_open sys_open task_a task_b task_c \
-    schedule proc_table p_proc_ready; do
+for symbol in kernel_entry start_first_process syscall_entry syscall_dispatch fs_open sys_open process_fork process_exec \
+    process_wait sys_fork sys_exec sys_wait task_a task_b task_c schedule proc_table p_proc_ready; do
     assert_symbol "${symbol}"
 done
 
@@ -218,4 +220,5 @@ printf '[ok] C 内核、IDT、PIC、Timer IRQ 和 Keyboard IRQ 均已验证。\n
 printf '[ok] 键盘扫描码已转换并写入字符缓冲区。\n'
 printf '[ok] TTY 已完成字符回显、行输入和回车提交。\n'
 printf '[ok] int 0x80 文件系统调用已完成创建、写入、读取、stat 和删除。\n'
+printf '[ok] fork/exec/wait 已通过动态进程槽位、栈复制、阻塞和退出唤醒验证。\n'
 printf '[ok] 三个独立任务已完成 A -> B -> C 的抢占式轮转。\n'

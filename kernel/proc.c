@@ -6,9 +6,9 @@
 PROCESS proc_table[NR_PROCS];
 PROCESS *p_proc_ready;
 volatile u32 schedule_count;
-volatile u32 task_run_count[NR_PROCS];
+volatile u32 task_run_count[NR_BOOT_PROCS];
 
-static u32 task_stacks[TASK_STACK_TOTAL / sizeof(u32)];
+u32 task_stacks[TASK_STACK_TOTAL / sizeof(u32)];
 static u32 scheduler_reported;
 
 static void copy_name(char *dst, const char *src)
@@ -46,22 +46,34 @@ static void init_process(u32 index, u32 entry, const char *name)
 
     proc_table[index].saved_esp = (u32)frame;
     proc_table[index].pid = index;
+    proc_table[index].ppid = 0;
     proc_table[index].ticks = PROCESS_QUANTUM;
     proc_table[index].priority = PROCESS_QUANTUM;
     proc_table[index].run_count = 0;
     proc_table[index].state = PROCESS_STATE_RUNNABLE;
+    proc_table[index].exit_status = 0;
+    proc_table[index].wait_pid = 0;
+    proc_table[index].wait_status = 0;
     copy_name(proc_table[index].name, name);
+    proc_table[index].argument[0] = 0;
     proc_table[index].initial_frame = *frame;
     task_run_count[index] = 0;
 }
 
 void init_processes(void)
 {
+    u32 index;
+
     schedule_count = 0;
     scheduler_reported = 0;
     init_process(0, (u32)task_a, "TaskA");
     init_process(1, (u32)task_b, "TaskB");
     init_process(2, (u32)task_c, "TaskC");
+    for (index = NR_BOOT_PROCS; index < NR_PROCS; index++) {
+        proc_table[index].saved_esp = 0;
+        proc_table[index].pid = index;
+        proc_table[index].state = PROCESS_STATE_UNUSED;
+    }
     p_proc_ready = &proc_table[0];
 }
 
@@ -70,6 +82,9 @@ void schedule(void)
     u32 current = p_proc_ready->pid;
     u32 next = (current + 1) % NR_PROCS;
 
+    while (proc_table[next].state != PROCESS_STATE_RUNNABLE) {
+        next = (next + 1) % NR_PROCS;
+    }
     p_proc_ready = &proc_table[next];
     p_proc_ready->ticks = PROCESS_QUANTUM;
     schedule_count++;

@@ -29,17 +29,30 @@ typedef char stack_frame_size_must_be_64_bytes[
 typedef struct process {
     u32 saved_esp;
     u32 pid;
+    u32 ppid;
     u32 ticks;
     u32 priority;
     u32 run_count;
     u32 state;
+    int exit_status;
+    u32 wait_pid;
+    int *wait_status;
     char name[16];
+    char argument[64];
     STACK_FRAME initial_frame;
 } PROCESS;
 
-#define NR_PROCS 3
+#define NR_BOOT_PROCS 3
+#define NR_PROCS 8
 #define PROCESS_STATE_RUNNABLE 0
+#define PROCESS_STATE_UNUSED 1
+#define PROCESS_STATE_BLOCKED 2
+#define PROCESS_STATE_ZOMBIE 3
 #define PROCESS_QUANTUM 5
+
+#define PROCESS_MAX_PROGRAMS 8
+#define PROCESS_NAME_SIZE 16
+#define PROCESS_ARGUMENT_SIZE 64
 
 #define TASK_STACK_SIZE 0x2000
 #define TASK_STACK_TOTAL (NR_PROCS * TASK_STACK_SIZE)

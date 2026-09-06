@@ -5,9 +5,19 @@
 
 static u8 selftest_started;
 
+static void fs_test_program(void)
+{
+    if (string_compare(process_argument(), "child") == 0) {
+        debug_puts("EXEC CHILD OK\r\n");
+        sys_exit(7);
+    }
+    sys_exit(8);
+}
+
 void init_system_selftest(void)
 {
     selftest_started = 0;
+    process_register_program("fs-test", fs_test_program);
 }
 
 void run_system_selftest(void)
@@ -17,7 +27,9 @@ void run_system_selftest(void)
     char buffer[16];
     FILE_STAT stat;
     int fd;
+    int pid;
     int result;
+    int status;
 
     if (selftest_started) {
         return;
@@ -50,4 +62,21 @@ void run_system_selftest(void)
 
     sys_write(FS_STDOUT, console_message, sizeof(console_message) - 1);
     debug_puts("FS SYSCALLS OK\r\n");
+
+    pid = sys_fork();
+    if (pid == 0) {
+        sys_exec("fs-test", "child");
+        sys_exit(126);
+    }
+    if (pid < 0) {
+        debug_puts("FORK EXEC WAIT FAIL\r\n");
+        return;
+    }
+
+    status = -1;
+    if (sys_wait((u32)pid, &status) != pid || status != 7) {
+        debug_puts("FORK EXEC WAIT FAIL\r\n");
+        return;
+    }
+    debug_puts("FORK EXEC WAIT OK\r\n");
 }

@@ -45,6 +45,19 @@ void syscall_dispatch(STACK_FRAME *frame)
     case SYS_UNLINK:
         result = fs_unlink((const char *)frame->ebx);
         break;
+    case SYS_FORK:
+        result = process_fork(frame);
+        break;
+    case SYS_EXEC:
+        result = process_exec(frame, (const char *)frame->ebx, (const char *)frame->ecx);
+        break;
+    case SYS_WAIT:
+        result = process_wait(frame->ebx, (int *)frame->ecx);
+        break;
+    case SYS_EXIT:
+        process_exit((int)frame->ebx);
+        result = 0;
+        break;
     default:
         result = SYS_ERR_INVAL;
         break;

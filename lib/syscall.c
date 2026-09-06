@@ -42,3 +42,23 @@ int sys_unlink(const char *path)
 {
     return invoke_syscall(SYS_UNLINK, (u32)path, 0, 0);
 }
+
+int sys_fork(void)
+{
+    return invoke_syscall(SYS_FORK, 0, 0, 0);
+}
+
+int sys_exec(const char *name, const char *argument)
+{
+    return invoke_syscall(SYS_EXEC, (u32)name, (u32)argument, 0);
+}
+
+int sys_wait(u32 pid, int *status)
+{
+    return invoke_syscall(SYS_WAIT, pid, (u32)status, 0);
+}
+
+void sys_exit(int status)
+{
+    invoke_syscall(SYS_EXIT, (u32)status, 0, 0);
+}
