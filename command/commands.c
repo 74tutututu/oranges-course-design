@@ -99,3 +99,35 @@ void command_rm(void)
     debug_puts("COMMAND RM OK\r\n");
     sys_exit(0);
 }
+
+static const char *state_name(u32 state)
+{
+    if (state == PROCESS_STATE_RUNNABLE) {
+        return "RUN";
+    }
+    if (state == PROCESS_STATE_BLOCKED) {
+        return "WAIT";
+    }
+    return "ZOMBIE";
+}
+
+void command_ps(void)
+{
+    PROCESS_INFO processes[NR_PROCS];
+    int count = sys_process_list(processes, NR_PROCS);
+    int index;
+
+    write_text("PID PPID STATE NAME\n");
+    for (index = 0; index < count; index++) {
+        write_number(processes[index].pid);
+        write_text("   ");
+        write_number(processes[index].ppid);
+        write_text("    ");
+        write_text(state_name(processes[index].state));
+        write_text("  ");
+        write_text(processes[index].name);
+        write_text("\n");
+    }
+    debug_puts("COMMAND PS OK\r\n");
+    sys_exit(0);
+}

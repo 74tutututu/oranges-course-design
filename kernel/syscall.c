@@ -58,6 +58,9 @@ void syscall_dispatch(STACK_FRAME *frame)
         process_exit((int)frame->ebx);
         result = 0;
         break;
+    case SYS_PROCESS_LIST:
+        result = process_list((PROCESS_INFO *)frame->ebx, frame->ecx);
+        break;
     default:
         result = SYS_ERR_INVAL;
         break;

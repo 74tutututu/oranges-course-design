@@ -84,6 +84,7 @@ run_observed_qemu()
         "${root_dir}/scripts/qemu-send-text.sh" \
             'help' \
             'clear' \
+            'ps' \
             'cat hello.txt' \
             'stat hello.txt' \
             'rm hello.txt' \
@@ -180,6 +181,7 @@ grep --text --quiet --fixed-strings 'COMMAND CAT OK' "${success_log}" || fail 'c
 grep --text --quiet --fixed-strings 'COMMAND STAT OK' "${success_log}" || fail 'stat 命令没有输出文件信息'
 grep --text --quiet --fixed-strings 'COMMAND RM OK' "${success_log}" || fail 'rm 命令没有删除文件'
 grep --text --quiet --fixed-strings 'COMMAND STAT NOENT' "${success_log}" || fail '删除后的 stat 没有返回不存在'
+grep --text --quiet --fixed-strings 'COMMAND PS OK' "${success_log}" || fail 'ps 命令没有输出进程快照'
 grep --text --quiet --fixed-strings 'SYSCALL INT OK' "${success_log}" || fail 'int 0x80 系统调用入口没有执行'
 grep --text --quiet --fixed-strings 'FS SYSCALLS OK' "${success_log}" || fail '文件系统调用回归失败'
 grep --text --quiet --fixed-strings 'EXEC CHILD OK' "${success_log}" || fail 'exec 没有运行注册程序'
@@ -198,8 +200,8 @@ task_c_line="$(line_number 'TASK C OK' "${success_log}")"
 ((task_a_line < task_b_line && task_b_line < task_c_line)) || fail '任务首次运行顺序不是 A -> B -> C'
 
 for symbol in kernel_entry start_first_process syscall_entry syscall_dispatch fs_open sys_open process_fork process_exec \
-    process_wait sys_fork sys_exec sys_wait shell_execute command_cat command_stat command_rm task_a task_b task_c \
-    schedule proc_table p_proc_ready; do
+    process_wait process_list sys_fork sys_exec sys_wait sys_process_list shell_execute command_cat command_stat \
+    command_rm command_ps task_a task_b task_c schedule proc_table p_proc_ready; do
     assert_symbol "${symbol}"
 done
 
@@ -244,4 +246,5 @@ printf '[ok] int 0x80 文件系统调用已完成创建、写入、读取、stat
 printf '[ok] fork/exec/wait 已通过动态进程槽位、栈复制、阻塞和退出唤醒验证。\n'
 printf '[ok] Shell 已验证 help、clear 和未知命令提示。\n'
 printf '[ok] cat、stat、rm 已通过 fork/exec/wait 和文件系统调用完成验证。\n'
+printf '[ok] ps 已通过只读进程快照系统调用完成验证。\n'
 printf '[ok] 三个独立任务已完成 A -> B -> C 的抢占式轮转。\n'

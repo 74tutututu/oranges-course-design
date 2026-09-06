@@ -62,3 +62,8 @@ void sys_exit(int status)
 {
     invoke_syscall(SYS_EXIT, (u32)status, 0, 0);
 }
+
+int sys_process_list(PROCESS_INFO *buffer, u32 capacity)
+{
+    return invoke_syscall(SYS_PROCESS_LIST, (u32)buffer, capacity, 0);
+}

@@ -57,4 +57,11 @@ typedef struct process {
 #define TASK_STACK_SIZE 0x2000
 #define TASK_STACK_TOTAL (NR_PROCS * TASK_STACK_SIZE)
 
+typedef struct process_info {
+    u32 pid;
+    u32 ppid;
+    u32 state;
+    char name[PROCESS_NAME_SIZE];
+} PROCESS_INFO;
+
 #endif

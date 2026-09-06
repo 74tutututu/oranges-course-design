@@ -2,6 +2,7 @@
 #define ORANGES_SYSCALL_H
 
 #include "fs.h"
+#include "proc.h"
 #include "type.h"
 
 #define SYS_WRITE 0
@@ -14,6 +15,7 @@
 #define SYS_EXEC 7
 #define SYS_WAIT 8
 #define SYS_EXIT 9
+#define SYS_PROCESS_LIST 10
 
 #define SYS_ERR_NOENT -2
 #define SYS_ERR_BADF -9
@@ -32,5 +34,6 @@ int sys_fork(void);
 int sys_exec(const char *name, const char *argument);
 int sys_wait(u32 pid, int *status);
 void sys_exit(int status);
+int sys_process_list(PROCESS_INFO *buffer, u32 capacity);
 
 #endif

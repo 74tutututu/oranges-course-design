@@ -26,6 +26,7 @@ int process_exec(STACK_FRAME *frame, const char *name, const char *argument);
 int process_wait(u32 pid, int *status);
 void process_exit(int status);
 const char *process_argument(void);
+int process_list(PROCESS_INFO *buffer, u32 capacity);
 void task_a(void);
 void task_b(void);
 void task_c(void);
@@ -36,6 +37,7 @@ void shell_execute(const char *line);
 void command_cat(void);
 void command_stat(void);
 void command_rm(void);
+void command_ps(void);
 void init_system_selftest(void);
 void run_system_selftest(void);
 

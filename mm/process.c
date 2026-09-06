@@ -177,3 +177,20 @@ const char *process_argument(void)
 {
     return p_proc_ready->argument;
 }
+
+int process_list(PROCESS_INFO *buffer, u32 capacity)
+{
+    u32 index;
+    u32 count = 0;
+
+    for (index = 0; index < NR_PROCS && count < capacity; index++) {
+        if (proc_table[index].state != PROCESS_STATE_UNUSED) {
+            buffer[count].pid = proc_table[index].pid;
+            buffer[count].ppid = proc_table[index].ppid;
+            buffer[count].state = proc_table[index].state;
+            string_copy(buffer[count].name, proc_table[index].name, PROCESS_NAME_SIZE);
+            count++;
+        }
+    }
+    return (int)count;
+}

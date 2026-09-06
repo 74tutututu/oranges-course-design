@@ -33,6 +33,7 @@ void shell_init(void)
     process_register_program("cat", command_cat);
     process_register_program("stat", command_stat);
     process_register_program("rm", command_rm);
+    process_register_program("ps", command_ps);
     debug_puts("SHELL READY\r\n");
 }
 
@@ -65,13 +66,13 @@ void shell_execute(const char *line)
 
     if (string_compare(command, "help") == 0) {
         console_write("Built-ins: help clear\n");
-        console_write("Commands: cat stat rm\n");
+        console_write("Commands: cat stat rm ps\n");
         debug_puts("SHELL HELP OK\r\n");
     } else if (string_compare(command, "clear") == 0) {
         console_clear();
         debug_puts("SHELL CLEAR OK\r\n");
     } else if (string_compare(command, "cat") == 0 || string_compare(command, "stat") == 0 ||
-               string_compare(command, "rm") == 0) {
+               string_compare(command, "rm") == 0 || string_compare(command, "ps") == 0) {
         run_external(command, argument);
     } else {
         console_write("Unknown command: ");
