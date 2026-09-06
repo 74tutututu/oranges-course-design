@@ -24,11 +24,7 @@ static void finish_line(void)
         debug_puts("TTY OK\r\n");
     }
 
-    if (input_length != 0) {
-        console_write("You typed: ");
-        console_write(input_line);
-        console_putc('\n');
-    }
+    shell_execute(input_line);
     input_length = 0;
     print_prompt();
 }

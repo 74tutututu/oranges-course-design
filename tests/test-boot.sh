@@ -76,6 +76,17 @@ run_observed_qemu()
         printf 'sendkey backspace\n'
         printf 'sendkey c\n'
         printf 'sendkey ret\n'
+        printf 'sendkey h\n'
+        printf 'sendkey e\n'
+        printf 'sendkey l\n'
+        printf 'sendkey p\n'
+        printf 'sendkey ret\n'
+        printf 'sendkey c\n'
+        printf 'sendkey l\n'
+        printf 'sendkey e\n'
+        printf 'sendkey a\n'
+        printf 'sendkey r\n'
+        printf 'sendkey ret\n'
         sleep 5
     ) | timeout --signal=TERM 6s \
         qemu-system-i386 \
@@ -160,6 +171,10 @@ grep --text --quiet --fixed-strings 'KEY a' "${success_log}" || fail '键盘扫�
 grep --text --quiet --fixed-strings 'TTY READY' "${success_log}" || fail 'TTY 没有完成初始化'
 grep --text --quiet --fixed-strings 'TTY LINE ac' "${success_log}" || fail 'TTY 行编辑或回车提交失败'
 grep --text --quiet --fixed-strings 'TTY OK' "${success_log}" || fail 'TTY 行输入没有完成'
+grep --text --quiet --fixed-strings 'SHELL READY' "${success_log}" || fail 'Shell 没有完成初始化'
+grep --text --quiet --fixed-strings 'SHELL UNKNOWN OK' "${success_log}" || fail 'Shell 未知命令提示没有执行'
+grep --text --quiet --fixed-strings 'SHELL HELP OK' "${success_log}" || fail 'Shell help 没有执行'
+grep --text --quiet --fixed-strings 'SHELL CLEAR OK' "${success_log}" || fail 'Shell clear 没有执行'
 grep --text --quiet --fixed-strings 'SYSCALL INT OK' "${success_log}" || fail 'int 0x80 系统调用入口没有执行'
 grep --text --quiet --fixed-strings 'FS SYSCALLS OK' "${success_log}" || fail '文件系统调用回归失败'
 grep --text --quiet --fixed-strings 'EXEC CHILD OK' "${success_log}" || fail 'exec 没有运行注册程序'
@@ -178,7 +193,7 @@ task_c_line="$(line_number 'TASK C OK' "${success_log}")"
 ((task_a_line < task_b_line && task_b_line < task_c_line)) || fail '任务首次运行顺序不是 A -> B -> C'
 
 for symbol in kernel_entry start_first_process syscall_entry syscall_dispatch fs_open sys_open process_fork process_exec \
-    process_wait sys_fork sys_exec sys_wait task_a task_b task_c schedule proc_table p_proc_ready; do
+    process_wait sys_fork sys_exec sys_wait shell_execute task_a task_b task_c schedule proc_table p_proc_ready; do
     assert_symbol "${symbol}"
 done
 
@@ -221,4 +236,5 @@ printf '[ok] 键盘扫描码已转换并写入字符缓冲区。\n'
 printf '[ok] TTY 已完成字符回显、行输入和回车提交。\n'
 printf '[ok] int 0x80 文件系统调用已完成创建、写入、读取、stat 和删除。\n'
 printf '[ok] fork/exec/wait 已通过动态进程槽位、栈复制、阻塞和退出唤醒验证。\n'
+printf '[ok] Shell 已验证 help、clear 和未知命令提示。\n'
 printf '[ok] 三个独立任务已完成 A -> B -> C 的抢占式轮转。\n'

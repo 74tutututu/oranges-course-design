@@ -118,6 +118,7 @@ void kernel_main(void)
     init_process_service();
     fs_init();
     init_system_selftest();
+    shell_init();
     for (i = 0; i < NR_IRQ; i++) {
         irq_table[i] = spurious_irq;
     }

@@ -31,6 +31,8 @@ void task_b(void);
 void task_c(void);
 void tty_init(void);
 void tty_poll(void);
+void shell_init(void);
+void shell_execute(const char *line);
 void init_system_selftest(void);
 void run_system_selftest(void);
 
