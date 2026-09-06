@@ -16,6 +16,9 @@
 | 2026-09-06 | 赵晴 | 实现 Shell 行解析、`help`、`clear` 与未知命令提示 | `01acdeb` | `make test`、日志 `SHELL HELP/CLEAR/UNKNOWN OK` |
 | 2026-09-06 | 赵晴 | 实现经 fork/exec/wait 启动的 `cat`、`stat`、`rm` 命令 | `0a1cc1f` | `make test`、`assets/screenshots/m7-shell.png` |
 | 2026-09-06 | 赵晴 | 清理动态进程名显示残影并稳定 QEMU 键盘注入时序 | `182349f` | `make test`、`assets/screenshots/m7-shell.png` |
+| 2026-09-06 | 赵晴 | 实现只读进程快照系统调用和 `ps` 命令 | `ea7942e` | `make test`、日志 `COMMAND PS OK` |
+| 2026-09-06 | 赵晴 | 扩展命令失败路径回归并更新最终 CI/截图入口 | `b99f85d` | `make clean && make test`、`assets/screenshots/m8-final.png` |
+| 2026-09-06 | 赵晴 | 整理完整报告、Word 交付物、答辩提纲和验收清单 | `6b923cd`、`docs/defense.md`、`docs/acceptance.md` | `make report` |
 
 ## 问题与解决记录
 

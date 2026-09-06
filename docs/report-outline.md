@@ -1,6 +1,6 @@
 # 项目报告提纲
 
-最终文档应导出为带目录和阅读导航的 Word 或 PDF。以下结构用于持续收集内容，不应等到答辩前集中补写。
+本提纲已落实为 `docs/report.md`，并可通过 `make report` 生成带目录的 `docs/OrangeS-course-design-report.docx`。以下结构保留用于核对报告覆盖范围。
 
 ## 1. 项目概述
 

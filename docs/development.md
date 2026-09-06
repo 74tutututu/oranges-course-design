@@ -2,12 +2,13 @@
 
 ## Docker 环境
 
-仓库以 Ubuntu 24.04 为基础镜像，包含 NASM、32 位 GCC 工具链、binutils、Make、mtools 和 QEMU x86。
+仓库以 Ubuntu 24.04 为基础镜像，包含 NASM、32 位 GCC 工具链、binutils、Make、mtools、QEMU x86 和 Pandoc。
 
 ```bash
 make docker-build
 make docker-check
 make docker-test
+make docker-report
 make docker-shell
 ```
 
@@ -17,13 +18,13 @@ make docker-shell
 
 ```bash
 sudo apt update
-sudo apt install build-essential gcc-multilib binutils make mtools nasm qemu-system-x86
+sudo apt install build-essential gcc-multilib binutils make mtools nasm pandoc qemu-system-x86
 make check-env
 ```
 
 `make check-env` 会检查工具版本，并临时编译、链接一个 32 位 freestanding ELF 探针。只有命令存在但 `gcc -m32` 或 `ld -m elf_i386` 不可用时，自检仍会失败。
 
-## M7 构建和运行
+## 最终构建和运行
 
 在开发容器或安装好依赖的宿主机中运行：
 
@@ -33,6 +34,7 @@ make image
 make test
 make run
 make screenshot
+make report
 ```
 
 - `build/boot.bin` 是严格 512 字节的 Boot Sector。
@@ -41,7 +43,8 @@ make screenshot
 - `build/os.img` 是包含 Loader 和 Kernel 的 1.44 MB FAT12 软盘镜像。
 - `make test` 使用 QEMU debugcon 验证启动、IRQ、调度、TTY、系统调用、进程生命周期和全部 Shell 命令，适用于 CI。
 - `make run` 使用 QEMU curses 文本界面显示 BIOS 输出，默认 10 秒后自动结束；可用 `RUN_TIMEOUT=30s` 调整展示时间。
-- `make screenshot` 通过 `scripts/qemu-send-text.sh` 注入 `help` 和 `cat hello.txt`，生成 `assets/screenshots/m7-shell.png`。
+- `make screenshot` 通过 `scripts/qemu-send-text.sh` 注入 `ps`，生成 `assets/screenshots/m8-final.png`。
+- `make report` 使用 Pandoc 从 `docs/report.md` 生成 `docs/OrangeS-course-design-report.docx`。
 
 启动后可手工执行：
 
@@ -50,6 +53,7 @@ help
 clear
 cat readme.txt
 stat hello.txt
+ps
 rm hello.txt
 stat hello.txt
 ```
